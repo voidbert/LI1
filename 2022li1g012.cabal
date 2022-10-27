@@ -3,7 +3,7 @@ name:               2022li1g012
 version:            0.1.0.0
 
 -- A short (one-line) description of the package.
--- synopsis:
+-- synopsis: Projeto de LI1 (clone de Crossy Road)
 
 -- A longer description of the package.
 -- description:
@@ -18,7 +18,7 @@ library
     Tarefa2_2022li1g012
     Tarefa3_2022li1g012
     Tarefa4_2022li1g012
-  build-depends:    base ^>=4.16.3.0
+  build-depends:    base ^>=4.15.1.0
   hs-source-dirs:   src
   default-language: Haskell2010
 
@@ -30,7 +30,7 @@ executable 2022li1g012
     Tarefa2_2022li1g012
     Tarefa3_2022li1g012
     Tarefa4_2022li1g012
-  build-depends:    base ^>=4.16.3.0
+  build-depends:    base ^>=4.15.1.0
   hs-source-dirs:   src
   default-language: Haskell2010
 
@@ -47,6 +47,6 @@ test-suite 2022li1g012-tests
     Tarefa2_2022li1g012_Spec
     Tarefa3_2022li1g012_Spec
     Tarefa4_2022li1g012_Spec
-  build-depends:        base ^>=4.16.3.0, HUnit
+  build-depends:        base ^>=4.15.1.0, HUnit
   hs-source-dirs:       tests src
   default-language:     Haskell2010
