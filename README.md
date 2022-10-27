@@ -1,83 +1,111 @@
-# Laboratórios de Informática I
+# Crossy Road
 
-## Repositório
+Clone do famoso jogo como um projeto de Laboratórios de Informática I
 
-Se tiver chave SSH configurada no GitLab pode fazer clone com o seguinte link:
+### Autoria do Grupo 12
+ - Humberto Gil Azevedo Sampaio Gomes (a104348[at]alunos.uminho.pt)
+ - José António Fernandes Alves Lopes (a104541[at]alunos.uminho.pt)
+
+## Como começar
+
+### Clonar o repositório
+
+Com SSH:
 
 ```bash
-$ git clone git@gitlab.com:uminho-di/li1/2223/2022li1g012.git
-$ cd 2022li1g012
+$ git clone git@gitlab.com:uminho-di/li1/2223/projetos/2022li1g012.git
 ```
 
-Alternativamente, pode fazer clone por https com o seguinte link:
+Ou por HTTPS:
 
 ```bash
 $ git clone https://gitlab.com/uminho-di/li1/2223/projetos/2022li1g012.git
-$ cd 2022li1g012
 ```
 
-## Interpretador
+### Interpretador
 
-Pode abrir o interpretador do Haskell (GHCi) utilizando o cabal ou diretamente.
-
-1. Usando o cabal
+De momento, o programa não tem um ponto de entrada, pelo que deve usar o cabal
+para iniciar o interpretador:
 
 ```bash
 $ cabal repl
 ```
 
-2. Usando o GHCi
+## Desenvolvimento
 
-```bash
-$ ghci -i="src" -i="tests" src/Main.hs
-```
+### Testes
 
-## Testes
-
-O projecto utiliza a biblioteca [HUnit](https://hackage.haskell.org/package/HUnit) para fazer testes unitários.
-
-Pode correr os testes utilizando uma das seguintes alternativas:
-
-1. Usando o `cabal`
+O projeto utiliza a biblioteca
+[HUnit](https://hackage.haskell.org/package/HUnit) para fazer testes unitários.
+ParJosa os executar:
 
 ```bash
 $ cabal test
 ```
 
-2. Usando o GHCi
+### Documentação
 
-```bash
-$ ghci -i="src" -i="tests" tests/Spec.hs
->>> runTestsT1 -- Correr os testes tarefa 1
->>> runTestsT2 -- Correr os testes tarefa 2
->>> runTestsT3 -- Correr os testes tarefa 3
->>> runTestsT4 -- Correr os testes tarefa 4
->>> main -- Correr todos os testes
-```
-
-3. Usando o wrapper `runhaskell`
-
-```bash
-$ runhaskell -i="src" -i="tests" tests/Spec.hs
-```
-
-## Documentação
-
-Pode gerar a documentação com o [Haddock](https://haskell-haddock.readthedocs.io/).
-
-1. Usando o `cabal`
+Pode gerar a documentação do projeto usando
+[Haddock](https://haskell-haddock.readthedocs.io/):
 
 ```bash
 $ cabal haddock --haddock-all
 ```
 
-2. Usando diretamente o `haddock`
+### Contribuição
 
-```bash
-$ haddock -h -o doc/html src/*.hs
+Seguem-se algumas normas na escrita de código para garantir a sua uniformidade.
+Estas são vagamente inspiradas nas [orientações recomendadas para Haskell](https://wiki.haskell.org/Programming_guidelines).
+
+#### Formatação de ficheiros
+
+ - As linhas devem ter, no máximo, um comprimento de 80 caracteres;
+
+ - Não deixar espaço em branco numa linha vazia ou no final de uma linha
+ (*trailing whitespace*);
+
+ - Não usar tabulações. Dois espaços devem ser usados no seu lugar;
+
+ - Um ficheiro deve terminar com o caracter *newline* ('\n', 0x0A);
+
+ - Em guardas e casos envolvendo `where`, `let`, `do` e `case`, deve começar-se
+ uma nova linha para as novas expressões, que se devem manter alinhadas;
+
+```haskell
+fact n
+  | n == 0 = 1
+  | n > 0  = n * fact (n - 1)
 ```
 
-## Grupo 12
+ - Notação de expressões lambda: preferir `\ x -> ...` a `\x -> ...`;
 
-- **A104541** José António Fernandes Alves Lopes;
-- **A104348** Humberto Gil Azevedo Sampaio Gomes;
+ - Usar um espaço para separar as parcelas de operadores (`foo == bar`).
+
+### Nomes de objetos
+
+ - Utilizar `camelCase` para funções e `PascalCase` para tipos, módulos, ...
+
+ - Funções com acumulador devem ter o nome da função principal com o sufixo
+   `Acc`. Exemplo:
+
+```haskell
+sum lst = sumAcc lst 0
+  where sumAcc []     acc = acc
+        sumAcc (x:xs) acc = sumAcc xs (x+acc)
+```
+
+#### Outras boas práticas
+
+ - O nome das funções, dos tipos de dados e de variáveis devem estar em língua
+ portuguesa;
+
+ - Explicitar o tipo de funções;
+
+ - Evitar funções parciais (por exemplo, usando o tipo `Data.Maybe`);
+
+ - Procurar escrever funções sucintas e reutilizáveis para outros problemas;
+
+ - Documentar o código com o [Haddock](https://haskell-haddock.readthedocs.io/)
+ e procurar escrever testes unitários com
+ [HUnit](https://hackage.haskell.org/package/HUnit).
+
