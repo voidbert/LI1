@@ -1,12 +1,8 @@
 cabal-version:      2.4
 name:               2022li1g012
 version:            0.1.0.0
-
--- A short (one-line) description of the package.
--- synopsis: Projeto de LI1 (clone de Crossy Road)
-
--- A longer description of the package.
--- description:
+synopsis:           Projeto de LI1 (clone de Crossy Road)
+license:            Apache-2.0
 
 author:             José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
                     Humberto Gil Azevedo Sampaio Gomes <a104348@alunos.uminho.pt>
