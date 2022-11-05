@@ -25,6 +25,44 @@ Módulo para a realização da Tarefa 1 do projeto de LI1 em 2022/23.
 module Tarefa1_2022li1g012 where
 import LI12223
 
+{-|
+  Função semelhante a 'Prelude.foldl', mas com uma condição de saída, para que
+  não seja necessário processar a totalidade de uma lista caso o resultado do
+  fold já for sabido após o processamento de apenas alguns elementos.
+
+  === Exemplos
+
+  O fold não chega ao fim:
+
+  >>> foldlWhile (\ acc x -> acc < 24) (*) 1 (\ _ _ -> (-5)) [1..5]
+  -5
+
+
+  __O fold chega ao fim!__:
+
+  >>> foldlWhile (\acc x -> acc < 24) (*) 1 (-5) [1..4]
+  24
+
+  @4!@ é calculado mas, como 4 é o último elemento da lista, não se dá
+  verificação do predicado!
+
+
+  O fold não chega ao fim:
+
+  >>> foldlWhile (\acc x -> acc < 200) (*) 1 (-5) [1..5]
+  120
+
+-}
+foldlWhile :: (b -> a -> Bool) -- ^ Predicado que dita se o @fold@ para ou não
+           -> (b -> a -> b) -- ^ Função geradora do acumulador seguinte
+           -> b -- ^ Valor inicial do acumulador
+           -> (b -> a -> b) -- ^ Função que dá o devolvido quando o predicado é falso
+           -> [a] -- ^ Lista a ser analisada
+           -> b -- ^ Valor devolvido (último acumulador)
+foldlWhile _ _ acc _ [] = acc
+foldlWhile p f acc d (x:xs)
+  | p acc x   = foldlWhile p f (f acc x) d xs
+  | otherwise = d acc x
 
 {-|
  Informação recolhida sobre uma linha até a um dado momento / elemento da sua
@@ -40,7 +78,7 @@ data HistoricoLinha =
     Int        -- ^ O número de obstáculos anteriores do mesmo tipo
     deriving Show -- ^ Para propósitos de /debugging/
 
-historicoInvalido = HL False  0 False Nenhum 0
+historicoLinhaInvalido = HL False 0 False Nenhum 0
 
 {-|
   'obstaculoValido' @t o@ avalia se o obstáculo @o@ é adequado para o tipo de
@@ -152,27 +190,11 @@ historicoLinhaSeguinte :: Terreno -- ^ O tipo de terreno da linha
                        -> HistoricoLinha
 historicoLinhaSeguinte ter o l hl@(HL b lc n u c)
   | o == u = if obstaculoValido ter o && consecutivosValidos u (c + 1) then
-      HL b (lc + 1) (n || o == Nenhum) o (c + 1) else historicoInvalido
+      HL b (lc + 1) (n || o == Nenhum) o (c + 1) else historicoLinhaInvalido
 
   | obstaculoValido ter o = HL b (lc + 1) (n || o == Nenhum) o 1
 
-  | otherwise = historicoInvalido
-
-
-
-{-
-  TODO - é possível definir esta função com outras funções (foldl, ou takeWhile
-  juntamente com scanl). Analisar essa possibilidade.
--}
-linhaValidaAcc :: (Terreno, [Obstaculo]) -- ^ Linha a ser analisada
-               -> Largura                -- ^ Largura desejada do mapa
-               -> HistoricoLinha         -- ^ Acumulador
-               -> HistoricoLinha
-linhaValidaAcc (_, []) _ acc = acc
-linhaValidaAcc (ter, (h:t)) l acc
-  | historicoLinhaValido l acc =
-      linhaValidaAcc (ter, t) l (historicoLinhaSeguinte ter h l acc)
-  | otherwise = historicoInvalido
+  | otherwise = historicoLinhaInvalido
 
 {-|
   'linhaValida' verifica se uma linha do mapa é válida, i.e., cumpre os
@@ -214,7 +236,7 @@ linhaValidaAcc (ter, (h:t)) l acc
   >>> linhaValida 3 (Rio 2, [Nenhum, Carro, Nenhum])
   False
 
-  Exemplos de linha válidas:
+  Exemplos de linhas válidas:
 
   >>> linhaValida 6 (Estrada 1, [Nenhum, Carro, Carro, Nenhum, Carro, Nenhum])
   True
@@ -225,10 +247,13 @@ linhaValidaAcc (ter, (h:t)) l acc
 linhaValida :: Largura -- ^ Largura desejada da linha (a do mapa)
             -> (Terreno, [Obstaculo]) -- ^ Linha a ser validada
             -> Bool
-linhaValida lg ln = b && lg == lc && n
-  where (HL b lc n _ _) = linhaValidaAcc ln lg (HL True 0 False Nenhum 0)
-
-
+linhaValida lg (ter, ln) = b && lg == lc && n
+  where (HL b lc n _ _) = foldlWhile
+                            (\ hl _ -> historicoLinhaValido lg hl)
+                            (\ hl o -> historicoLinhaSeguinte ter o lg hl)
+                            (HL True 0 False Nenhum 0)
+                            (\ _ _ -> historicoLinhaInvalido)
+                            ln
 
 mapaValido :: Mapa -> Bool
 mapaValido = undefined
