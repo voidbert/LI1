@@ -74,9 +74,57 @@ tl29 = "Misc6" ~: False ~=? linhaValida 5 (Estrada 1,
   [Carro, Nenhum, Arvore, Carro, Carro])
 
 
+-- Testes de mapas por inteiro
+
+inv1 = (Relva, replicate 6 Arvore)
+inv2 = (Estrada 2, [Carro, Carro, Carro, Carro, Nenhum, Carro])
+larg = (Rio 3, [Nenhum, Nenhum, Tronco])
+
+rel = (Relva, [Nenhum, Arvore, Arvore, Arvore, Nenhum, Nenhum])
+rel2 = (Relva, replicate 6 Nenhum)
+
+riop = (Rio 2, [Tronco, Tronco, Nenhum, Tronco, Nenhum, Nenhum])
+rion = (Rio (-1), [Nenhum, Tronco, Tronco, Nenhum, Nenhum, Nenhum])
+
+estp = (Estrada 1, [Carro, Carro, Nenhum, Carro, Carro, Carro])
+estn = (Estrada (-3), [Nenhum, Nenhum, Carro, Nenhum, Nenhum, Carro])
+
+
+
+tm1 = "Larg1" ~: False ~=? mapaValido (Mapa 6 [riop, rion, larg, estp])
+tm2 = "Larg2" ~: True ~=? mapaValido (Mapa 3 [larg, (Relva, replicate 3 Nenhum)])
+tm3 = "Larg3" ~: False ~=? mapaValido (Mapa 6 [estp, rel, larg])
+
+tm4 = "Inv1" ~: False ~=? mapaValido (Mapa 6 [inv2, riop, estn])
+tm5 = "Inv2" ~: False ~=? mapaValido (Mapa 6 [estp, estn, inv1])
+tm6 = "Inv3" ~: False ~=? mapaValido (Mapa 6 [riop, inv1, inv2, riop])
+
+tm7 = "Rio1" ~: True ~=? mapaValido (Mapa 6 [riop, rion, rel, rion, riop])
+tm8 = "Rio2" ~: False ~=? mapaValido (Mapa 6 [estp, estp, rion, rion])
+tm9 = "Rio3" ~: False ~=? mapaValido (Mapa 6 [riop, larg])
+tm10 = "Rio4" ~: True ~=? mapaValido (Mapa 6 [riop, estn, estn])
+
+tm11 = "Suc1" ~: True ~=? mapaValido (Mapa 6 [riop, rion, riop, rion])
+tm12 = "Suc2" ~: False ~=? mapaValido (Mapa 6 [riop, rion, riop, rion, riop])
+tm13 = "Suc3" ~: True ~=? mapaValido (Mapa 6 [estp, estp, estp, rel, rel])
+tm14 = "Suc4" ~: False ~=? mapaValido (Mapa 6 [rel, estp, estp, estn, estn, estp, estn])
+tm15 = "Suc5" ~: True ~=? mapaValido (Mapa 6 [rel, rel, rel, rel, rel2])
+tm16 = "Suc6" ~: False ~=? mapaValido (Mapa 6 [rel, rel2, rel, rel, rel2, rel])
+
+tm17 = "MMisc1" ~: True ~=? mapaValido (Mapa 6 [rel, estp, estp, rel, rel, rion])
+tm18 = "MMisc2" ~: True ~=? mapaValido (Mapa 6
+  [rel, rel, rel, rel, riop, rion, estn, estn, rion, rel, rel, estn, estp])
+tm19 = "MMisc3" ~: False ~=? mapaValido (Mapa 6
+  [rel, rel, rel, estp, rion, riop, rion, riop, rion])
+tm20 = "MMisc4" ~: True ~=? mapaValido (Mapa 6
+  [riop, estp, estp, riop, rel, rel, rel2, rel2, estp])
+
 testsT1 :: Test
 testsT1 = TestLabel "Testes Tarefa 1" $ test [
   tl1, tl2, tl3, tl4, tl5, tl6, tl7, tl8, tl9, tl10, tl11, tl12, tl13, tl14,
   tl15, tl16, tl17, tl18, tl19, tl20, tl21, tl22, tl23, tl24, tl25, tl26, tl27,
-  tl28, tl29
+  tl28, tl29,
+
+  tm1, tm2, tm3, tm4, tm5, tm6, tm7, tm8, tm9, tm10, tm11, tm12, tm13, tm14,
+  tm15, tm16, tm17, tm18, tm19, tm20
   ]
