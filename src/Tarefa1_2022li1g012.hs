@@ -503,6 +503,10 @@ historicoMapaSeguinte l hm@(HM b tu c) ln@(t, _)
   * Contiguamente, não devem existir mais do que 4 rios, nem 5 estradas ou
   relvas.
 
+  === Notas
+
+  Complexidade: \( O(n \times m) \), \(n\) linhas de largura \(m\)
+
   === Exemplos
 
   Linha inválida:
