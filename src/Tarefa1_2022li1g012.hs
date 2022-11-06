@@ -212,27 +212,27 @@ historicoLinhaValido l (HL b lc _ _ _) = b && lc <= l
 
   Contagem do número total de elementos e de elementos consecutivos:
 
-  >>> historicoLinhaSeguinte Relva Nenhum 30 (HL True 12 True Nenhum 3)
+  >>> historicoLinhaSeguinte Relva 30 (HL True 12 True Nenhum 3) Nenhum
   HL True 13 True Nenhum 4
 
   Contagem do número total de elementos e fim de elementos consecutivos:
 
-  >>> historicoLinhaSeguinte Relva Arvore 30 (HL True 12 True Nenhum 3)
+  >>> historicoLinhaSeguinte Relva 30 (HL True 12 True Nenhum 3) Arvore
   HL True 13 True Arvore 1
 
   Elementos consecutivos em excesso:
 
-  >>> historicoLinhaSeguinte (Rio 1) Tronco 10 (HL True 7 True Tronco 5)
+  >>> historicoLinhaSeguinte (Rio 1) 10 (HL True 7 True Tronco 5) Tronco
   HL False 0 False Nenhum 0 -- um estado inválido
 
   Elemento inválido:
 
-  >>> historicoLinhaSeguinte (Rio 1) Carro 10 (HL True 4 True Tronco 2)
+  >>> historicoLinhaSeguinte (Rio 1) 10 (HL True 4 True Tronco 2) Carro
   HL False 0 False Nenhum 0 -- um estado inválido
 
   Quando um obstáculo @Nenhum@ é encontrado:
 
-  >>> historicoLinhaSeguinte Relva Nenhum 30 (HL True 5 False Arvore 2)
+  >>> historicoLinhaSeguinte Relva 30 (HL True 5 False Arvore 2) Nenhum
   HL True 6 True Nenhum 1
 
   Esta função não verfica se o histórico fornecido é inválido (recorrendo a
@@ -240,19 +240,16 @@ historicoLinhaValido l (HL b lc _ _ _) = b && lc <= l
   casos.
 -}
 historicoLinhaSeguinte :: Terreno -- ^ O tipo de terreno da linha
-                       -> Obstaculo -- ^ Obstáculo a ser analisado
                        -> Largura -- ^ Largura desejada da linha (a do mapa)
                        -> HistoricoLinha -- ^ O atual estado da análise
+                       -> Obstaculo -- ^ Obstáculo a ser analisado
                        -> HistoricoLinha
-historicoLinhaSeguinte ter o l hl@(HL b lc n u c)
-  | o == u = if obstaculoValido ter o
-             && obstaculosConsecutivosValidos u (c + 1) then
-      HL b (lc + 1) (n || o == Nenhum) o (c + 1) else historicoLinhaInvalido
-
-  | obstaculoValido ter o = HL b (lc + 1) (n || o == Nenhum) o 1
-
-  | otherwise = historicoLinhaInvalido
-
+historicoLinhaSeguinte ter l hl@(HL b lc n u c) o
+  | not (obstaculoValido ter o) = historicoLinhaInvalido
+  | o == u && not (obstaculosConsecutivosValidos u (c + 1)) =
+      historicoLinhaInvalido
+  | o == u    = HL b (lc + 1) (n || o == Nenhum) o (c + 1)
+  | otherwise = HL b (lc + 1) (n || o == Nenhum) o 1
 
 {-|
   'foldLinha' reúne alguma informação necessária para se concluir sobre a
@@ -266,7 +263,7 @@ foldLinha :: Largura -- ^ A largura desejada da linha
           -> (Terreno, [Obstaculo]) -- ^ A linha para ser analisada
           -> HistoricoLinha -- ^ Estado final de processamento da linha
 foldLinha lg (ter, ln) = foldlWhile (\ hl _ -> historicoLinhaValido lg hl)
-                        (\ hl o -> historicoLinhaSeguinte ter o lg hl)
+                        (historicoLinhaSeguinte ter lg)
                         (HL True 0 False Nenhum 0)
                         (\ _ _ -> historicoLinhaInvalido) ln
 
