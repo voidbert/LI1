@@ -20,9 +20,28 @@ Description : Validação de um mapa
 Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
               Humberto Gil Azevedo Sampaio Gomes <a104348@alunos.uminho.pt>
 
-Módulo para a realização da Tarefa 1 do projeto de LI1 em 2022/23.
+Módulo para a realização da Tarefa 1 do projeto de LI1 em 2022/23. Verificação
+da validade de um mapa de acordo com os critérios em:
+
+[Especificações](https://gitlab.com/uminho-di/li1/2223/projetos/2022li1g012/-/blob/Tarefa_1/spec/Fase1.pdf)
+
 -}
-module Tarefa1_2022li1g012 where
+module Tarefa1_2022li1g012 (
+  -- * Funções expostas
+  linhaValida, mapaValido,
+  -- * Funções e tipos de dados auxiliares
+  -- ** Para a análise de linhas
+  HistoricoLinha(HL), historicoLinhaInvalido, historicoLinhaValido,
+  obstaculoValido, obstaculosConsecutivosValidos, historicoLinhaSeguinte,
+  foldLinha,
+  -- ** Para a análise de mapas
+  HistoricoMapa(HM), historicoMapaInvalido, historicoMapaValido,
+  terrenosConsecutivosValidos, sentidoRios, tipologiaTerreno,
+  historicoMapaSeguinte,
+  -- ** Gerais
+  foldlWhile, sgn
+  ) where
+
 import LI12223
 
 {-|
@@ -100,6 +119,8 @@ data HistoricoLinha =
     Int        -- ^ O número de obstáculos anteriores do mesmo tipo
     deriving Show -- ^ Para propósitos de /debugging/
 
+-- | Exemplo de histório de linha inválido, devolvido quando algo é descoberto
+-- que invalide uma linha, durante a sua análise.
 historicoLinhaInvalido = HL False 0 False Nenhum 0
 
 {-|
@@ -153,7 +174,19 @@ obstaculosConsecutivosValidos _      _ = True
 {-|
   'historicoLinhaValido' verifica se o estado de análise de uma linha ainda é
   válido. Em caso negativo, é desnecessário desperdiçar poder de processamento
-  na validação do resto da linha.
+  na validação do resto da linha (ver 'foldlWhile').
+
+  === Notas
+
+  Esta função não deve ser utilizada para verificar se o __último__ estado de
+  uma linha é ou não válido, mas apenas se se pode continuar a sua análise. Por
+  exemplo, caso nenhum obstáculo @Nenhum@ tivesse sido encontrado, esta função
+  permitiria a continuação da análise da linha (para tentar encontrar
+  @Nenhum@s). No entanto, no final da linha, pelo menos um @Nenhum@ teria de
+  ter sido encontrado.
+
+  >>> historicoLinhaValido 20 (HL True 20 False Arvore 20)
+  True
 
   === Exemplo
 
@@ -224,6 +257,10 @@ historicoLinhaSeguinte ter o l hl@(HL b lc n u c)
 {-|
   'foldLinha' reúne alguma informação necessária para se concluir sobre a
   validade de uma linha, tanto por si só como no contexto de um mapa.
+
+  === Notas
+
+  Complexidade: \( O(n) \)
 -}
 foldLinha :: Largura -- ^ A largura desejada da linha
           -> (Terreno, [Obstaculo]) -- ^ A linha para ser analisada
@@ -251,6 +288,10 @@ foldLinha lg (ter, ln) = foldlWhile (\ hl _ -> historicoLinhaValido lg hl)
 
   * O comprimento da lista de obstáculos de cada linha corresponde exatamente à
   largura do mapa.
+
+  === Notas
+
+  Complexidade: \( O(n) \)
 
   === Exemplos
 
@@ -284,7 +325,7 @@ foldLinha lg (ter, ln) = foldlWhile (\ hl _ -> historicoLinhaValido lg hl)
 -}
 linhaValida :: Largura -- ^ Largura desejada da linha (a do mapa)
             -> (Terreno, [Obstaculo]) -- ^ Linha a ser validada
-            -> Bool
+            -> Bool -- ^ Se a linha é ou não válida
 linhaValida lg (ter, ln) = b && lg == lc && n
   where (HL b lc n _ _) = foldLinha lg (ter, ln)
 
@@ -294,12 +335,21 @@ linhaValida lg (ter, ln) = b && lg == lc && n
   especificados em 'mapaValido'.
 -}
 data HistoricoMapa =
+  {-|
+    === Nota
+
+    @(HM True (Rio 3) 2)@ não significa que os últimos 2 terrenos foram @Rio@s
+    de velocidade 3, mas apenas que os últimos 2 terrenos foram @Rio@s e o
+    último deles tinha velocidade 3.
+  -}
   HM
     Bool -- ^ Se o mapa é válido até ao momento
     Terreno -- ^ O tipo de terreno anterior
     Int -- ^ Número de terrenos anteriores do mesmo tipo
     deriving Show -- ^ Para propósitos de /debugging/
 
+-- | Exemplo de histórico de mapa inválido, devolvido quando algo é descoberto
+-- que invalide um mapa, durante a sua análise.
 historicoMapaInvalido = HM False Relva 0
 
 {-|
@@ -313,15 +363,19 @@ historicoMapaInvalido = HM False Relva 0
 
   === Exemplos
 
+  Note-se que é impossível haver quatro rios seguidos com a mesma velocidade.
+  'terrenosConsecutivosValidos' apenas verifica se podem existir quatro rios
+  seguidos, desde que eles cumpram os critérios de velocidade exigidos.
+
   >>> terrenosConsecutivosValidos (Rio 1) 4
   True
 
   >>> terrenosConsecutivosValidos Relva 6
   False
 -}
-terrenosConsecutivosValidos :: Terreno
-                            -> Int
-                            -> Bool
+terrenosConsecutivosValidos :: Terreno -- ^ Tipo de terreno (independentemente da velocidade)
+                            -> Int -- ^ Número de instâncias consecutivas
+                            -> Bool -- ^ Possibilidade ou impossibilidade
 terrenosConsecutivosValidos Relva       n = n <= 5
 terrenosConsecutivosValidos (Estrada _) n = n <= 5
 terrenosConsecutivosValidos (Rio _)     n = n <= 4
@@ -340,13 +394,13 @@ terrenosConsecutivosValidos (Rio _)     n = n <= 4
   >>> sentidoRios (Rio 2) (Rio (-4))
   True
 
-  Terrenos que não @Rio@s não são afetados
+  Terrenos que não @Rio@s não são afetados:
 
   >>> sentidoRios Relva (Rio 0)
   True
 -}
-sentidoRios :: Terreno
-            -> Terreno
+sentidoRios :: Terreno -- ^ Rio anterior (na análise do mapa)
+            -> Terreno -- ^ Rio atual (na análise do mapa)
             -> Bool
 sentidoRios (Rio n1) (Rio n2) = sgn n1 == (-1) * sgn n2
 sentidoRios _        _        = True
@@ -376,11 +430,12 @@ tipologiaTerreno _           _           = False
   na validação do resto do mapa.
 
   === Exemplo
-  historicoMapaValido (HM False Relva 0)
+
+  >>> historicoMapaValido (HM False Relva 0)
   False
 -}
-historicoMapaValido :: HistoricoMapa
-                    -> Bool
+historicoMapaValido :: HistoricoMapa -- ^ O histórico atual
+                    -> Bool -- ^ Se é ou não válido
 historicoMapaValido (HM b _ _) = b
 
 {-|
@@ -401,9 +456,7 @@ historicoMapaValido (HM b _ _) = b
   HM True (Rio -1) 2
 
   Note-se que, apesar dos rios consecutivos terem velocidades distintas, a
-  contagem de rios consecutivos aumenta. Assim, @HM True (Rio -1) 2@ não
-  significa que os últimas duas linhas eram rios de velocidade -1, mas sim que
-  as últimas duas linham eram rios, e a última tinha velocidade -1.
+  contagem de rios consecutivos aumenta. Ver 'HM'.
 
 
   >>> historicoMapaSeguinte 3 (HM True Relva 5) (Relva, [Nenhum, Nenhum, Nenhum])
@@ -474,7 +527,7 @@ historicoMapaSeguinte l hm@(HM b tu c) ln@(t, _)
   >>> mapaValido (Mapa 2 [(Rio 1, [Nenhum, Tronco]), ((Rio 2), [Nenhum, Nenhum])])
   False
 
-  Elementos sucessivos:
+  Elementos sucessivos em excesso:
 
   >>> mapaValido (Mapa 1 [(Relva, [Nenhum]),
                           (Relva, [Nenhum]),
