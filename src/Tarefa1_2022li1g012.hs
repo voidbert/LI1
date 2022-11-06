@@ -23,7 +23,7 @@ Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
 Módulo para a realização da Tarefa 1 do projeto de LI1 em 2022/23. Verificação
 da validade de um mapa de acordo com os critérios em:
 
-[Especificações](https://gitlab.com/uminho-di/li1/2223/projetos/2022li1g012/-/blob/Tarefa_1/spec/Fase1.pdf)
+[Especificações](https://gitlab.com/uminho-di/li1/2223/projetos/2022li1g012/-/blob/main/spec/Fase1.pdf)
 
 -}
 module Tarefa1_2022li1g012 (
