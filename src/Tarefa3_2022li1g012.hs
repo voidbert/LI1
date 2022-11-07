@@ -244,5 +244,14 @@ obstaculosJogador jgd@(Jogador (xi, yi)) j m = (o1, o2)
         o1       = obstaculoLinha xi l1
         o2       = obstaculoLinha xf l2
 
+animaJogador :: Jogador
+             -> Jogada
+             -> Mapa
+             -> Jogador
+animaJogador jgd@(Jogador (x,y)) j m = (x + dx1 + dx2, y + dy1 + dy2)
+  where ((t, o1) , (_, o2)) = obstaculosJogador jgd j m
+        (dx1, dy1) = if o2 /= Arvore then deslocamento j else (0, 0)
+	  (dx2, dy2) = if o1 == Tronco then (velocidadeTerreno t, 0) else (0, 0)
+
 animaJogo :: Jogo -> Jogada -> Jogo
-animaJogo = undefined
+animaJogo (Jogo jgd m) j = (Jogo (animaJogador jgd j m) (animaMapa m))
