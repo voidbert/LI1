@@ -25,6 +25,35 @@ Módulo para a realização da Tarefa 4 do projeto de LI1 em 2022/23.
 module Tarefa4_2022li1g012 where
 
 import LI12223
+import Data.Maybe
 
-jogoTerminou :: Jogo -> Bool
-jogoTerminou = undefined
+jogoTerminou :: Jogo
+             -> Bool
+jogoTerminou (Jogo jgd@(Jogador (x,_)) (Mapa l lns))
+  | not (dentroMapaLados l jgd) = True
+  | isNothing ln = True -- dentro dos limites verticais (linha achada no mapa)
+  | otherwise = let jln@(ter, jlno) = fromMaybe (Relva, []) ln
+                    obs          = jlno !! x
+                in not (obstaculoAdequado ter obs)
+  where ln = linhaJogador jgd lns
+
+dentroMapaLados :: Largura
+                -> Jogador
+                -> Bool
+dentroMapaLados l (Jogador (x,y)) = x >= 0 && x < l
+
+linhaJogador :: Jogador
+             -> [(Terreno, [Obstaculo])]
+             -> Maybe (Terreno, [Obstaculo])
+linhaJogador _ [] = Nothing
+linhaJogador (Jogador (x, y)) (l:ls)
+  | y <  0    = Nothing
+  | y == 0    = Just l
+  | otherwise = linhaJogador (Jogador (x, y - 1)) ls
+
+obstaculoAdequado :: Terreno
+                  -> Obstaculo
+                  -> Bool
+obstaculoAdequado (Rio _) o     = o /= Nenhum
+obstaculoAdequado (Estrada _) o = o /= Carro
+obstaculoAdequado Relva o       = True
