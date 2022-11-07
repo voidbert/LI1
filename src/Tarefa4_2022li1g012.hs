@@ -38,12 +38,15 @@ import Data.Maybe
   >>> jogoTerminou (Jogo (Jogador (1,1)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),(Estrada 1,[Carro,Nenhum,Carro])]))
   False
 
-  >>> jogoTerminou (Jogo (Jogador (1,2)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),(Estrada 1,[Carro,Nenhum,Carro])]))
+  >>> jogoTerminou (Jogo (Jogador (0,1)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),(Estrada 1,[Carro,Nenhum,Carro])]))
+  True
+
+  >>> jogoTerminou (Jogo (Jogador (3,1)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),(Estrada 1,[Carro,Nenhum,Carro])]))
   True
 -}
 
 
-jogoTerminou :: Jogo
+jogoTerminou :: Jogo 
              -> Bool
 jogoTerminou (Jogo jgd@(Jogador (x,_)) (Mapa l lns))
   | not (dentroMapaLados l jgd) = True
@@ -54,8 +57,7 @@ jogoTerminou (Jogo jgd@(Jogador (x,_)) (Mapa l lns))
   where ln = linhaJogador jgd lns
 
 {-|
-  A função 'dentroMapaLados' avalia se o Jogador saíu do mapa pela direita ou
-  pela esquerda.
+  A função 'dentroMapaLados' avalia se o Jogador está dentro do mapa.
 
   === Exemplos
 
@@ -66,13 +68,15 @@ jogoTerminou (Jogo jgd@(Jogador (x,_)) (Mapa l lns))
   False
 -}
 
-dentroMapaLados :: Largura
+dentroMapaLados :: Largura 
                 -> Jogador
                 -> Bool
 dentroMapaLados l (Jogador (x,y)) = x >= 0 && x < l
 
 {-|
   A função 'linhaJogador' devolve a linha em que o jogador se encontra no mapa.
+  Se a galinha não for encontrada, ela está fora do mapa pelos limites do topo
+  ou pelos limites de baixo, pelo que a função devolve @Nothing@.
 
   === Exemplos
 
@@ -81,6 +85,9 @@ dentroMapaLados l (Jogador (x,y)) = x >= 0 && x < l
 
   >>> linhaJogador (Jogador (1,0)) [(Relva, [Nenhum, Arvore]), (Estrada 1, [Carro, Nenhum])]
   Just (Relva,[Nenhum,Arvore])
+
+  >>> linhaJogador (Jogador (0,2)) [(Relva, [Nenhum, Arvore]), (Estrada 1, [Carro, Nenhum])]
+  Nothing
 -}
 
 linhaJogador :: Jogador
@@ -94,7 +101,7 @@ linhaJogador (Jogador (x, y)) (l:ls)
 
 {-|
   A função 'obstaculoAdequado'  @t o@ avalia se um obstáculo o@ é apropriado 
-  para a deslocação do Jogador, ou se impede a sobrevivência do mesmo.
+  para o Jogador, ou se impede a sobrevivência do mesmo.
 
   Para esta função consideramos que o jogador não se pode encontrar na mesma
   posição do que o obstáculo @Nenhum@, quando em @Rios _@ e do que obstáculo 
