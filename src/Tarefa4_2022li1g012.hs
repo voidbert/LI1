@@ -27,6 +27,22 @@ module Tarefa4_2022li1g012 where
 import LI12223
 import Data.Maybe
 
+
+{-|
+  A função 'jogoTerminou' avalia se o Jogador morreu devido a se encontrar na 
+  posição de obstáculos não adequados, ou por se encontrar fora dos limites do
+  mapa.
+
+  === Exemplos
+
+  >>> jogoTerminou (Jogo (Jogador (1,1)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),(Estrada 1,[Carro,Nenhum,Carro])]))
+  False
+
+  >>> jogoTerminou (Jogo (Jogador (1,2)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),(Estrada 1,[Carro,Nenhum,Carro])]))
+  True
+-}
+
+
 jogoTerminou :: Jogo
              -> Bool
 jogoTerminou (Jogo jgd@(Jogador (x,_)) (Mapa l lns))
@@ -37,10 +53,35 @@ jogoTerminou (Jogo jgd@(Jogador (x,_)) (Mapa l lns))
                 in not (obstaculoAdequado ter obs)
   where ln = linhaJogador jgd lns
 
+{-|
+  A função 'dentroMapaLados' avalia se o Jogador saíu do mapa pela direita ou
+  pela esquerda.
+
+  === Exemplos
+
+  >>> dentroMapaLados 4 (Jogador (1,1))
+  True
+
+  >>> dentroMapaLados 1 (Jogador (2,1))
+  False
+-}
+
 dentroMapaLados :: Largura
                 -> Jogador
                 -> Bool
 dentroMapaLados l (Jogador (x,y)) = x >= 0 && x < l
+
+{-|
+  A função 'linhaJogador' devolve a linha em que o jogador se encontra no mapa.
+
+  === Exemplos
+
+  >>> linhaJogador (Jogador (1,1)) [(Rio 1, [Nenhum, Tronco]),(Estrada 1, [Carro, Nenhum])]
+  Just (Estrada 1,[Carro,Nenhum])
+
+  >>> linhaJogador (Jogador (1,0)) [(Relva, [Nenhum, Arvore]), (Estrada 1, [Carro, Nenhum])]
+  Just (Relva,[Nenhum,Arvore])
+-}
 
 linhaJogador :: Jogador
              -> [(Terreno, [Obstaculo])]
@@ -50,6 +91,27 @@ linhaJogador (Jogador (x, y)) (l:ls)
   | y <  0    = Nothing
   | y == 0    = Just l
   | otherwise = linhaJogador (Jogador (x, y - 1)) ls
+
+{-|
+  A função 'obstaculoAdequado'  @t o@ avalia se um obstáculo o@ é apropriado 
+  para a deslocação do Jogador, ou se impede a sobrevivência do mesmo.
+
+  Para esta função consideramos que o jogador não se pode encontrar na mesma
+  posição do que o obstáculo @Nenhum@, quando em @Rios _@ e do que obstáculo 
+  @Carro@, quando em @Estradas _@. No terreno @Relva@ o Jogador só ocupa a 
+  posição de obstáculos @Nenhum@, pelo que nunca afeta a sua sobrevivência.
+
+  === Exemplos
+
+  >>> obstaculoAdequado (Rio (-1)) Nenhum
+  False
+
+  >>> obstaculoAdequado (Relva) Arvore
+  True
+
+  >>> obstaculoAdequado (Estrada 1) Nenhum
+  True
+-}
 
 obstaculoAdequado :: Terreno
                   -> Obstaculo
