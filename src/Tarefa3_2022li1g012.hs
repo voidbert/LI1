@@ -222,11 +222,11 @@ obstaculoLinha n (Just (ter, obs))
 
   === Exemplos
 
-  @@@
+  @
   m = Mapa 4 [ (Relva    , [Nenhum, Arvore, Arvore, Arvore]),
                (Rio 3    , [Tronco, Tronco, Nenhum, Tronco]),
                (Estrada 1, [Nenhum, Carro, Carro, Nenhum])]
-  @@@
+  @
 
   >>> obstaculosJogador (Jogador (0, 2)) (Move Cima) m
   (Just (Estrada 1, Nenhum), Just (Rio 3, Tronco))
@@ -244,14 +244,107 @@ obstaculosJogador jgd@(Jogador (xi, yi)) j m = (o1, o2)
         o1       = obstaculoLinha xi l1
         o2       = obstaculoLinha xf l2
 
+{-|
+  'animaJogador' devolve a posição do jogador após o seu movimento numa jogada,
+  tomando em conta fatores como para onde se deseja mover, o obstáculo onde se
+  encontra, e o obstáculo para onde se deseja mover.
+
+  === Notas
+
+  Complexidade: \( O(n \times m) \), num mapa de \(n\) linhas de largura \(m\)
+
+  === Exemplos
+
+  @
+  m = Mapa 4 [ (Relva    , [Nenhum, Arvore, Arvore, Arvore]),
+               (Rio     1, [Tronco, Tronco, Nenhum, Tronco]),
+	       (Rio  (-1), [Nenhum, Tronco, Nenhum, Nenhum]),
+               (Estrada 1, [Nenhum, Carro, Carro, Nenhum])]
+  @
+
+  Neste exemplo, o jogador tenta mover-se para onde há uma árvore, não
+  consegue, e é movido pela corrente do rio para a direita.
+
+  >>> animaJogador (Jogador (1, 1)) (Move Cima) m
+  Jogador (2, 1)
+
+  O jogador é incapaz de sair do mapa __pelos seus movimentos__ (apesar de o
+  conseguir fazer se estiver num tronco, por exemplo):a
+
+  >>> animaJogador (Jogador (0, 0)) (Move Esquerda) m
+  Jogador (0, 0)
+
+  Casos indeterminados (a serem esclarecidos): TODO
+
+  O jogador move-se lateralmente se se mover para a frente? Se sim, que terreno
+  controla esse movimento: o onde está ou o onde aterra?
+
+  >>> animaJogador (Jogador (3, 2)) (Move Baixo) m
+  ???
+-}
 animaJogador :: Jogador
              -> Jogada
              -> Mapa
              -> Jogador
-animaJogador jgd@(Jogador (x,y)) j m = (x + dx1 + dx2, y + dy1 + dy2)
-  where ((t, o1) , (_, o2)) = obstaculosJogador jgd j m
-        (dx1, dy1) = if o2 /= Arvore then deslocamento j else (0, 0)
-	  (dx2, dy2) = if o1 == Tronco then (velocidadeTerreno t, 0) else (0, 0)
+animaJogador jgd@(Jogador (x,y)) j m = Jogador (x + dx1 + dx2, y + dy1 + dy2)
+  where (to1, to2) = obstaculosJogador jgd j m
+        (dx1, dy1) = case to2 of
+                       Nothing          -> (0, 0)
+                       Just (_, Arvore) -> (0, 0)
+                       _                -> deslocamento j
+        (dx2, dy2) = case to1 of
+                       Just (t, Tronco) -> (velocidadeTerreno t, 0)
+                       _                -> (0, 0)
 
+{-|
+  'animaJogo' parte de um 'Jogo', e atualiza-o após uma 'Jogada'. Tanto o mapa
+  é modificado (carros e troncos movem-se) como o jogador pode mudar de
+  posição (por vontade própria ou por movimento do tronco em que possa estar).
+
+  === Critérios
+
+  1. Numa @Estrada@ ou @Rio@ com velocidade \(v\), os obstáculos devem mover-se
+  \(|v|\) unidades na direcção determinada.
+  2. As jogadas @Move Cima@, @Move Baixo@, etc. fazem com que o jogador se mova
+  1 unidade para cima, baixo, etc., respetivamente.
+  3. Mesmo quando o jogador não efetua qualquer movimento (i.e. a sua jogada é
+  @Parado@), se o personagem se encontrar em cima de um @Tronco@, o jogador
+  acompanha o movimento do @Tronco@.
+  4. O jogador não consegue escapar do mapa através dos seus movimentos. Por
+  exemplo, se o jogador se encontrar na linha de topo do mapa, então mover-se
+  para cima não tem qualquer efeito, uma vez que já se encontra no limite do
+  mapa.
+  5. Ao deslocar os obstáculos de uma linha, assim que desaparecerem por um dos
+  lados do mapa, devem reaparecer no lado oposto.
+  6. O efeito de deslize do mapa não é para ser implementado nesta função. Por
+  outras palavras, as dimensões do mapa não devem sofrer alterações após
+  invocar esta função.
+
+  __Adições__
+
+  Como explicitado pela Doutora Olga Pachego (omp@di.uminho.pt) após uma
+  questão minha, a função verifica colisões com árvores, i.e., o jogador não
+  pode ficar sobreposto a uma árvore após uma jogada.
+
+  O movimento lateral devido a rios ainda é uma questão a ser esclarecida
+  (consultar exemplos de 'animaJogador'), quando o movimento do jogador é
+  vertical (@Move Cima@ ou @Move Baixo@).
+
+  === Notas
+
+  Complexidade: \( O(n \times m) \), mapa de \(n\) linhas de largura \(m\).
+  Para simplicidade do código, duas iterações do mapa são feitas.
+
+  === Exemplos
+
+  >>> animaJogo (Jogo (Jogador (1, 0)) (Mapa 3 [ (Rio 1, [Nenhum, Tronco, Tronco]) ])) Parado
+  (Jogo (Jogador (2, 0)) (Mapa 3 [(Rio 1, [Tronco, Nenhum, Tronco])] ))
+
+  O jogador é incapaz de sair do mapa pelos seus movimentos:
+
+  >>> animaJogo (Jogo (Jogador (0, 0)) (Mapa 1 [ (Relva, [Nenhum])])) (Move Cima)
+  (Jogo (Jogador (0, 0)) (Mapa 1 [(Relva, [Nenhum])]))
+-}
 animaJogo :: Jogo -> Jogada -> Jogo
 animaJogo (Jogo jgd m) j = (Jogo (animaJogador jgd j m) (animaMapa m))
+
