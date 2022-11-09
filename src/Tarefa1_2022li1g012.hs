@@ -33,13 +33,12 @@ module Tarefa1_2022li1g012 (
   -- ** Para a análise de linhas
   HistoricoLinha(HL), historicoLinhaInvalido, historicoLinhaValido,
   obstaculoValido, obstaculosConsecutivosValidos, historicoLinhaSeguinte,
-  foldLinha,
   -- ** Para a análise de mapas
   HistoricoMapa(HM), historicoMapaInvalido, historicoMapaValido,
   terrenosConsecutivosValidos, sentidoRios, tipologiaTerreno,
   historicoMapaSeguinte,
   -- ** Gerais
-  foldlWhile, sgn
+  foldlWhile, sgn, contaConsecutivos
   ) where
 
 import LI12223
@@ -104,11 +103,34 @@ sgn x
   | x == 0 = 0
   | x < 0  = -1
 
+{-|
+  'contaConsecutivos' @x@ conta o número de ocorrências consecutivas de @x@ no
+  início de uma lista.
+
+  === Notas
+
+  Apesar desta função poder ser útil para implementaões de 'linhaValida' e
+  'mapaValido', não é usada várias vezes, à medida que se analisa a linha, para
+  um menor número de iterações da lista. No entanto, é usada no final de cada
+  linha, para contar o número de elementos no início da linha, para analisar se
+  esta é (ou não) válida num contexto de mapa circular (ver 'linhaValida').
+
+  === Exemplo
+
+  >>> contaConsecutivos 3 [3, 3, 3, 3, 4, 12, 5, 3, 1, 3]
+  4
+-}
+contaConsecutivos :: Eq a => a   -- ^ Elemento a ser contado
+                          -> [a] -- ^ Lista onde procurar o elemento
+                          -> Int -- ^ Número de instâncias no início da linha
+contaConsecutivos o = length . fst . span (== o)
+
+
 
 {-|
- Informação recolhida sobre uma linha até a um dado momento / elemento da sua
- análise. Contém os dados necessários para a avaliação dos critérios
- especificados em 'linhaValida'.
+  Informação recolhida sobre uma linha até a um dado momento / elemento da sua
+  análise. Contém os dados necessários para a avaliação dos critérios
+  especificados em 'linhaValida'.
 -}
 data HistoricoLinha =
   HL
@@ -243,30 +265,13 @@ historicoLinhaSeguinte :: Terreno -- ^ O tipo de terreno da linha
                        -> Largura -- ^ Largura desejada da linha (a do mapa)
                        -> HistoricoLinha -- ^ O atual estado da análise
                        -> Obstaculo -- ^ Obstáculo a ser analisado
-                       -> HistoricoLinha
+                       -> HistoricoLinha -- ^ Histórico a ser usado para o próximo obstáculo
 historicoLinhaSeguinte ter l hl@(HL b lc n u c) o
   | not (obstaculoValido ter o) = historicoLinhaInvalido
   | o == u && not (obstaculosConsecutivosValidos u (c + 1)) =
       historicoLinhaInvalido
   | o == u    = HL b (lc + 1) (n || o == Nenhum) o (c + 1)
   | otherwise = HL b (lc + 1) (n || o == Nenhum) o 1
-
-{-|
-  'foldLinha' reúne alguma informação necessária para se concluir sobre a
-  validade de uma linha, tanto por si só como no contexto de um mapa.
-
-  === Notas
-
-  Complexidade: \( O(n) \)
--}
-foldLinha :: Largura -- ^ A largura desejada da linha
-          -> (Terreno, [Obstaculo]) -- ^ A linha para ser analisada
-          -> HistoricoLinha -- ^ Estado final de processamento da linha
-foldLinha lg (ter, ln) = foldlWhile (\ hl _ -> historicoLinhaValido lg hl)
-                        (historicoLinhaSeguinte ter lg)
-                        (HL True 0 False Nenhum 0)
-                        (\ _ _ -> historicoLinhaInvalido) ln
-
 
 {-|
   'linhaValida' verifica se uma linha do mapa é válida, i.e., cumpre os
@@ -290,6 +295,22 @@ foldLinha lg (ter, ln) = foldlWhile (\ hl _ -> historicoLinhaValido lg hl)
 
   Complexidade: \( O(n) \)
 
+  === Implementação
+
+  Tal como 'mapaValido', 'linhaValida' percorre uma linha elemento a elemento.
+  O padrão de computação é o de uma função com acumulador ('foldl'), mas com
+  uma condição de saída (ver 'foldlWhile' e 'historicoLinhaValido'). A cada
+  elemento analisado, confirma-se se está corretamente colocado com base em
+  informações dos elementos anteriores ('HistoricoLinha'), e atualizam-se essas
+  informações para o processamento do elemento seguinte
+  ('historicoLinhaSeguinte').
+
+  No final deste processo, se a linha for válida, contam-se os elementos
+  sucessivos no início da linha ('contaConsecutivos'), e combinam-se com os
+  sucessivos do mesmo tipo no fim da linha. Para a linha ser válida, este
+  número não pode ser maior do que o limite máximo de obstáculos sucessivos
+  desse tipo.
+
   === Exemplos
 
   Largura incorreta da linha:
@@ -305,6 +326,11 @@ foldLinha lg (ter, ln) = foldlWhile (\ hl _ -> historicoLinhaValido lg hl)
   Carros / troncos demasiados longos:
 
   >>> linhaValida 5 (Estrada 1, [Nenhum, Carro, Carro, Carro, Carro])
+  False
+
+  Carros / troncos demasiados longos (num contexto circular):
+
+  >>> linhaValida 5 (Estrada (-2), [Carro, Carro, Nenhum, Carro, Carro])
   False
 
   Acidente automóvel!:
@@ -323,8 +349,14 @@ foldLinha lg (ter, ln) = foldlWhile (\ hl _ -> historicoLinhaValido lg hl)
 linhaValida :: Largura -- ^ Largura desejada da linha (a do mapa)
             -> (Terreno, [Obstaculo]) -- ^ Linha a ser validada
             -> Bool -- ^ Se a linha é ou não válida
-linhaValida lg (ter, ln) = b && lg == lc && n
-  where (HL b lc n _ _) = foldLinha lg (ter, ln)
+linhaValida lg (ter, ln)
+  | b && lg == lc && n = -- Verificar circularidade do mapa
+      obstaculosConsecutivosValidos u (c + contaConsecutivos u ln)
+  | otherwise = False -- Algo inválido na linha
+  where (HL b lc n u c) = foldlWhile (\ hl _ -> historicoLinhaValido lg hl)
+                                     (historicoLinhaSeguinte ter lg)
+                                     (HL True 0 False Nenhum 0)
+                                     (\ _ _ -> historicoLinhaInvalido) ln
 
 {-|
   Informação recolhida sobre um mapa até um dado momento / linha da sua
@@ -478,9 +510,9 @@ historicoMapaValido (HM b _ _) = b
 historicoMapaSeguinte :: Largura -- ^ Largura desejada do mapa
                       -> HistoricoMapa -- ^  O atual estado da análise
                       -> (Terreno, [Obstaculo]) -- ^ Linha a ser analisada
-                      -> HistoricoMapa
+                      -> HistoricoMapa -- ^ Histórico a ser usado para a linha seguinte
 historicoMapaSeguinte l hm@(HM b tu c) ln@(t, _)
-  | not (bl && lc == l && n) = historicoMapaInvalido -- linha inválida
+  | not $ linhaValida l ln = historicoMapaInvalido -- linha inválida
 
   | not (sentidoRios tu t) = historicoMapaInvalido -- sentido dos rios
 
@@ -488,8 +520,6 @@ historicoMapaSeguinte l hm@(HM b tu c) ln@(t, _)
       HM b t (c+1) else historicoMapaInvalido
 
   | otherwise = HM b t 1 -- novo tipo de terreno
-
-  where (HL bl lc n _ _) = foldLinha l ln
 
 {-|
   'mapaValido' verifica se um mapa é válido, de acordo com os seguintes
@@ -506,6 +536,15 @@ historicoMapaSeguinte l hm@(HM b tu c) ln@(t, _)
   === Notas
 
   Complexidade: \( O(n \times m) \), \(n\) linhas de largura \(m\)
+
+  === Implementação
+
+  Tal como 'linhaValida', 'mapaValido' percorre uma mapa linha a linha.
+  O padrão de computação é o de uma função com acumulador ('foldl'), mas com
+  uma condição de saída (ver 'foldlWhile' e 'historicoMapaValido'). A cada
+  linha analisada, confirma-se se está corretamente colocada com base em
+  informações das linhas anteriores ('HistoricoMapa'), e atualizam-se essas
+  informações para o processamento da linha seguinte ('historicoMapaSeguinte').
 
   === Exemplos
 
@@ -537,7 +576,6 @@ historicoMapaSeguinte l hm@(HM b tu c) ln@(t, _)
                           (Relva, [Nenhum]),
                           (Relva, [Nenhum])])
   False
-
 -}
 mapaValido :: Mapa -- ^ Mapa a ser validado
            -> Bool -- ^ Se o mapa é ou não válido
