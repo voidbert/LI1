@@ -76,26 +76,28 @@ obstaculosCirculares l@(o:obs)
 -- se só falta um e não há nenhums -> nenhum
 -- otherwise -> qualquer outra coisa valida (nenhum, obstaculo caso comprimento correto)
 
-proximosObs :: Int  -- ^ Comprimento final da lista
+proximosObstaculosValidos :: Int  -- ^ Comprimento final da lista
             -> (Terreno, [Obstaculo]) 
             -> [Obstaculo]
-proximosObs l (Rio _, o@(_:obs))
-  | length o == l                                                        = []
-  | l - length o == 1 && not (elem Nenhum o)                             = [Nenhum]
-  | l - length o == 1 && obstaculosCirculares o                      < 5 = [Nenhum, Tronco] 
-  | l - length o /= 1 && contaConsecutivos (== Tronco) (reverse obs) < 5 = [Nenhum, Tronco]
-  | otherwise                                                            = [Nenhum]
-proximosObs l (Estrada _, o@(_:obs))
-  | length o == l                                                        = []
-  | l - length o == 1 && not (elem Nenhum o)                             = [Nenhum]
-  | l - length o == 1 && obstaculosCirculares o                      < 3 = [Nenhum, Carro] 
-  | l - length o /= 1 && contaConsecutivos (== Tronco) (reverse obs) < 5 = [Nenhum, Carro]
-  | otherwise                                                            = [Nenhum]
-proximosObs l (Relva, o@(_:obs))
-  | length o == l                                                        = []
-  | l - length o == 1 && not (elem Nenhum o)                             = [Nenhum]
-  | otherwise                                                            = [Nenhum, Relva]
-  
+proximosObstaculosValidos l (Rio _, o@(_:obs))
+  | lgt == l                                                        = []
+  | l - lgt == 1 && not (elem Nenhum o)                             = [Nenhum]
+  | l - lgt == 1 && obstaculosCirculares o                      < 5 = [Nenhum, Tronco] 
+  | l - lgt /= 1 && contaConsecutivos (== Tronco) (reverse obs) < 5 = [Nenhum, Tronco]
+  | otherwise                                                       = [Nenhum]
+  where lgt = length o
+proximosObstaculosValidos l (Estrada _, o@(_:obs))
+  | lgt == l                                                        = []
+  | l - lgt == 1 && not (elem Nenhum o)                             = [Nenhum]
+  | l - lgt == 1 && obstaculosCirculares o                      < 3 = [Nenhum, Carro] 
+  | l - lgt /= 1 && contaConsecutivos (== Tronco) (reverse obs) < 5 = [Nenhum, Carro]
+  | otherwise                                                       = [Nenhum]
+  where lgt = length o                                              
+proximosObstaculosValidos l (Relva, o@(_:obs))
+  | lgt == l                                                        = []
+  | l - lgt == 1 && not (elem Nenhum o)                             = [Nenhum]
+  | otherwise                                                       = [Nenhum, Arvore]
+  where lgt = length o
 
 
 
