@@ -22,7 +22,15 @@ Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
 
 Módulo para a realização da Tarefa 3 do projeto de LI1 em 2022/23.
 -}
-module Tarefa3_2022li1g012 where
+module Tarefa3_2022li1g012 (
+  -- * Funções expostas
+  animaJogo, animaMapa, animaLinha, animaJogador,
+  -- * Funções e tipos de dados auxiliares
+  -- ** Gerais
+  mIndice, velocidadeTerreno, deslocamento,
+  -- ** Obstáculos do jogador
+  Obstaculos2, obstaculosJogador, obstaculoLinha, Linhas2, linhasJogador
+  ) where
 
 import LI12223
 import Data.Maybe
@@ -49,7 +57,9 @@ import Data.Maybe
   >>> mIndice [10, 43, 21] 3
   Nothing
 -}
-mIndice :: [a] -> Int -> Maybe a
+mIndice :: [a] -- ^ A lista onde encontrar o elemento
+        -> Int -- ^ O índice do elemento desejado
+        -> Maybe a -- ^ O elemento caso exista
 mIndice [] n = Nothing
 mIndice (x:xs) n
   | n <  0 = Nothing
@@ -76,8 +86,8 @@ velocidadeTerreno (Estrada n) = n
 
 {-|
   'animaLinha' devolve a linha resultante após o seu movimento numa jogada.
-  Obstáculos em terrenos com velocidade @n@, movem-se @n@ posições para a
-  direita ou para a esquerda, caso @n@ seja positivo ou negativo,
+  Obstáculos em terrenos com velocidade \(v\), movem-se \(|v|\) posições para a
+  direita ou para a esquerda, caso \(v\) seja positivo ou negativo,
   respetivamente. Quando, no seu movimento, um obstáculo sai das bordas da
   linha é colocado no início da mesma (mapa circular).
 
@@ -87,6 +97,9 @@ velocidadeTerreno (Estrada n) = n
   aritmética modular (como os elementos ressurgem na linha, por exemplo, mover
   uma linha com 5 obstáculos 5 vezes para a direita é equivalente a ficar-se
   com a mesma linha).
+
+  Esta função pode apresentar comportamento inesperado caso a largura do mapa
+  não seja igual à da linha.
 
   Complexidade: \( O(n) \)
 
@@ -126,11 +139,9 @@ animaLinha l (t, os)
   Mapa 4 [ (Estrada 1, [Nenhum,Carro,Carro,Nenhum]),
            (Rio (-1), [Nenhum,Tronco,Tronco,Tronco] )]
 -}
-animaMapa :: Mapa
-          -> Mapa
-animaMapa (Mapa l []) = Mapa l []
-animaMapa (Mapa l (x:xs)) = Mapa l ((animaLinha l x) : n)
-  where (Mapa _ n) = animaMapa (Mapa l xs)
+animaMapa :: Mapa -- ^ Atual mapa
+          -> Mapa -- ^ Mapa para a jogada seguinte
+animaMapa (Mapa l lns) = Mapa l $ map (animaLinha l) lns
 
 {-|
   Um par de duas linhas, devolvido por 'linhasJogador'. A primeira linha
@@ -157,7 +168,8 @@ type Obstaculos2 = (Maybe (Terreno, Obstaculo), Maybe (Terreno, Obstaculo))
   >>> deslocamento (Move Direita)
   (1, 0)
 -}
-deslocamento :: Jogada -> Coordenadas
+deslocamento :: Jogada -- ^ Movimento desejado do jogador
+             -> Coordenadas -- ^ Vetor deslocamento
 deslocamento Parado          = (0,    0)
 deslocamento (Move Cima)     = (0, (-1))
 deslocamento (Move Baixo)    = (0,    1)
@@ -168,6 +180,22 @@ deslocamento (Move Direita)  = (1,    0)
   'linhasJogador' devolve duas linhas do mapa, caso existam. Essas são, por
   ordem, a linha onde o jogador se encontra e a linha para onde se deseja
   mover, de acordo com a jogada.
+
+  === Notas
+
+  Complexidade: \( O(n) \)
+
+  === Exemplos
+
+  @
+  m = Mapa 30 [ l0, l1, l2, l3 ] -- suponha-se que estas linhas estão definidas
+  @
+
+  >>> linhasJogador (Jogador (0, 0)) Parado m
+  (Just l0, Just l1)
+
+  >>> linhasJogador (Jogador (12, 3)) (Move Baixo) m
+  (Just l3, Nothing)
 -}
 linhasJogador :: Jogador -- ^ Jogador (e a sua posição)
               -> Jogada  -- ^ Movimento (ou ausência dele) do jogador
@@ -247,7 +275,8 @@ obstaculosJogador jgd@(Jogador (xi, yi)) j m = (o1, o2)
 {-|
   'animaJogador' devolve a posição do jogador após o seu movimento numa jogada,
   tomando em conta fatores como para onde se deseja mover, o obstáculo onde se
-  encontra, e o obstáculo para onde se deseja mover.
+  encontra, e o obstáculo para onde se deseja mover (ver critérios em
+  'animaJogo').
 
   === Notas
 
@@ -258,48 +287,64 @@ obstaculosJogador jgd@(Jogador (xi, yi)) j m = (o1, o2)
   @
   m = Mapa 4 [ (Relva    , [Nenhum, Arvore, Arvore, Arvore]),
                (Rio     1, [Tronco, Tronco, Nenhum, Tronco]),
-	       (Rio  (-1), [Nenhum, Tronco, Nenhum, Nenhum]),
+               (Rio  (-1), [Nenhum, Tronco, Nenhum, Nenhum]),
                (Estrada 1, [Nenhum, Carro, Carro, Nenhum])]
   @
+
+  Colisão com árvores:
+
+  >>> animaJogador (Jogador (0, 0)) (Move Direita) m
+  Jogador (0, 0)
+
+  O jogador é incapaz de sair do mapa __pelos seus movimentos__ (apesar de o
+  conseguir fazer se estiver num tronco, por exemplo):
+
+  >>> animaJogador (Jogador (0, 0)) (Move Esquerda) m
+  Jogador (0, 0)
+
+  >>> animaJogador (Jogador (3, 1)) Parado m
+  Jogador (4, 1)
+
+  Movimentos laterais em rios (a corrente afeta o movimento do jogador):
+
+  >>> animaJogador (Jogador (0, 1)) Parado m
+  Jogador (1, 1)
+
+  >>> animaJogador (Jogador (1, 1)) (Move Esquerda) m
+  Jogador (1, 1)
+
+  Movimentos verticais envolvendo rios (o rio não afeta o movimento lateral):
+
+  >>> animaJogador (Jogador (1, 1)) (Move Baixo) m
+  Jogador (1, 2)
 
   Neste exemplo, o jogador tenta mover-se para onde há uma árvore, não
   consegue, e é movido pela corrente do rio para a direita.
 
   >>> animaJogador (Jogador (1, 1)) (Move Cima) m
   Jogador (2, 1)
-
-  O jogador é incapaz de sair do mapa __pelos seus movimentos__ (apesar de o
-  conseguir fazer se estiver num tronco, por exemplo):a
-
-  >>> animaJogador (Jogador (0, 0)) (Move Esquerda) m
-  Jogador (0, 0)
-
-  Casos indeterminados (a serem esclarecidos): TODO
-
-  O jogador move-se lateralmente se se mover para a frente? Se sim, que terreno
-  controla esse movimento: o onde está ou o onde aterra?
-
-  >>> animaJogador (Jogador (3, 2)) (Move Baixo) m
-  ???
 -}
-animaJogador :: Jogador
-             -> Jogada
-             -> Mapa
-             -> Jogador
-animaJogador jgd@(Jogador (x,y)) j m = Jogador (x + dx1 + dx2, y + dy1 + dy2)
+animaJogador :: Jogador -- ^ Jogador
+             -> Jogada -- ^ Intenção de movimento do jogador
+             -> Mapa -- ^ Mapa, para verificação de obstáculos e correntes de rios
+             -> Jogador -- ^ Jogador com posição atualizada
+animaJogador jgd@(Jogador (x,y)) j m = Jogador (x + dx, y + dy)
   where (to1, to2) = obstaculosJogador jgd j m
         (dx1, dy1) = case to2 of
                        Nothing          -> (0, 0)
                        Just (_, Arvore) -> (0, 0)
                        _                -> deslocamento j
-        (dx2, dy2) = case to1 of
-                       Just (t, Tronco) -> (velocidadeTerreno t, 0)
-                       _                -> (0, 0)
+        dx2        = case to1 of
+                       Just (t, Tronco) -> velocidadeTerreno t
+                       _                -> 0
+        -- Caso o jogador se mova para cima ou para baixo, não é movido pelo rio
+        (dx, dy)   = if dy1 == 0 then (dx1 + dx2, 0) else (0, dy1)
 
 {-|
   'animaJogo' parte de um 'Jogo', e atualiza-o após uma 'Jogada'. Tanto o mapa
   é modificado (carros e troncos movem-se) como o jogador pode mudar de
-  posição (por vontade própria ou por movimento do tronco em que possa estar).
+  posição (por vontade própria ou por movimento do tronco em que possa estar):
+  ver 'animaMapa' e 'animaJogador'.
 
   === Critérios
 
@@ -326,9 +371,9 @@ animaJogador jgd@(Jogador (x,y)) j m = Jogador (x + dx1 + dx2, y + dy1 + dy2)
   questão minha, a função verifica colisões com árvores, i.e., o jogador não
   pode ficar sobreposto a uma árvore após uma jogada.
 
-  O movimento lateral devido a rios ainda é uma questão a ser esclarecida
-  (consultar exemplos de 'animaJogador'), quando o movimento do jogador é
-  vertical (@Move Cima@ ou @Move Baixo@).
+  Foi esclarecido pelo docente Xavier Gomes Pinho (d12736@di.uminho.pt) que a
+  corrente de rios não influencia movimentos verticais, apenas a ausência de
+  movimento e movimentos laterais.
 
   === Notas
 
@@ -337,6 +382,8 @@ animaJogador jgd@(Jogador (x,y)) j m = Jogador (x + dx1 + dx2, y + dy1 + dy2)
 
   === Exemplos
 
+  Movimento de um rio e o seu efeito sobre o jogador:
+
   >>> animaJogo (Jogo (Jogador (1, 0)) (Mapa 3 [ (Rio 1, [Nenhum, Tronco, Tronco]) ])) Parado
   (Jogo (Jogador (2, 0)) (Mapa 3 [(Rio 1, [Tronco, Nenhum, Tronco])] ))
 
@@ -344,7 +391,12 @@ animaJogador jgd@(Jogador (x,y)) j m = Jogador (x + dx1 + dx2, y + dy1 + dy2)
 
   >>> animaJogo (Jogo (Jogador (0, 0)) (Mapa 1 [ (Relva, [Nenhum])])) (Move Cima)
   (Jogo (Jogador (0, 0)) (Mapa 1 [(Relva, [Nenhum])]))
+
+  Para outros exemplos, consulte como o mapa e o jogador são modificados em
+  'animaMapa' e 'animaJogador', respetivamente.
 -}
-animaJogo :: Jogo -> Jogada -> Jogo
+animaJogo :: Jogo -- ^ Estado atual do jogo
+          -> Jogada -- ^ Jogada efetuada pelo jogador
+          -> Jogo -- ^ Jogo atualizado
 animaJogo (Jogo jgd m) j = (Jogo (animaJogador jgd j m) (animaMapa m))
 
