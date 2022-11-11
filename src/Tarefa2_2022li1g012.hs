@@ -65,9 +65,9 @@ import LI12223
   Quando o mapa fornecido apresenta 4 terrenos @Rio_@ seguidos :
 
   >>> estendeMapa (Mapa 1 [(Rio 2, [Nenhum]),(Rio (-1), [Nenhum]),
-                          (Rio (-5), [Nenhum]),(Rio 1, [Nenhum])]) 1
+                          (Rio 5, [Nenhum]),(Rio (-1), [Nenhum])]) 1
   Mapa 1 [(Relva,[Nenhum]),(Rio 2,[Nenhum]),(Rio (-1),[Nenhum]),
-         (Rio (-5),[Nenhum]),(Rio 1,[Nenhum])]
+         (Rio 5,[Nenhum]),(Rio (-1),[Nenhum])]
 -}
 
 estendeMapa :: Mapa 
@@ -100,43 +100,38 @@ estendeMapa m@(Mapa l lt@((terr, _):trs)) i
   Relva
 -}
 
-
 adicionaTerreno :: Mapa 
                 -> Int {- ^ Inteiro de 0 a 100, fornece pseudoaleatóriedade na geração dos
                             terrenos.
                        -}  
                 -> Terreno
 adicionaTerreno m@(Mapa l ((Rio v, _):_)) i
-  | v > 0 = velocidadeTerreno (ltp !! mod i r) (-i)
+  | v > 0 && verificarRio (ltp !! mod i r) i = velocidadeTerreno (ltp !! mod i r) (-i)
   | otherwise = velocidadeTerreno (ltp !! mod i r) i
   where ltp = proximosTerrenosValidos m 
         r = length ltp 
+        verificarRio t2 i = tipologiaTerreno t2 (Rio i)
 adicionaTerreno m i = velocidadeTerreno (ltp !! mod i r) i
   where ltp = proximosTerrenosValidos m 
         r = length ltp
 
-
 {- |
   Fornece uma lista de terrenos possíveis segundo os seguintes críterios:
  
-  
-  * Troncos têm, no máximo, 5 unidades de comprimento.
+  * No máximo existem 4 terrenos @Rios _@ consecutivos.
 
-  * Carro têm, no máximo, 3 unidades de comprimento.
-
-  * O mapa é circular.
-
-  * Existe pelo menos um obstáculo @Nenhum@ em cada linha.
+  * No máximo existem 5 terrenos @Estrada _@ e Relva consecutivos.
 
   === Exemplos 
 
-  >>> proximosTerrenosValidos (Mapa 3 [(Rio 2, [])])
+  >>> proximosTerrenosValidos (Mapa 3 [(Estrada 2, [])])
   [Rio 0,Estrada 0,Relva]
 
-  >>> 
-
-
+  >>> proximosTerrenosValidos (Mapa 3 [(Rio 0,[]),(Rio 0,[]),(Rio 1,[]),
+                                       (Rio (-1),[])])
+  [Estrada 0,Relva]
 -}
+
 proximosTerrenosValidos :: Mapa 
                         -> [Terreno]
 proximosTerrenosValidos (Mapa l [])    = [Rio 0, Estrada 0, Relva]
@@ -149,7 +144,21 @@ proximosTerrenosValidos (Mapa l lns@((Estrada v , _):_))
 proximosTerrenosValidos (Mapa l lns@((Relva, _):_))
   | contarTerrenos (Relva) lns     < 5 = [Rio 0, Estrada 0, Relva]
   | otherwise                          = [Rio 0, Estrada 0]
+
 {- |
+  'velocidadeTerreno' atribuí uma nova velocidade a um Terreno com uma 
+  velocidade já existente. Serve para dar novos valores de velocidade
+  a Terrenos provenientes da função 'proximosTerrenosValidos', no caso
+  do Terreno @Relva@ este não atribuí nenhum valor já que é um terreno
+  que não aceita valores de velocidade.
+
+  === Exemplos
+
+  >>> velocidadeTerreno (Rio 0) 8
+  Rio 8
+
+  >>> velocidadeTerreno Relva 2
+  Relva
 -}
 
 velocidadeTerreno :: Terreno 
@@ -160,8 +169,13 @@ velocidadeTerreno (Estrada _) i = Estrada i
 velocidadeTerreno (Relva) i     = Relva
 
 {- |
--- Funções Auxiliares para "proximosTerrenosValidos"
--- Conta o numero de terrenos consecutivos de uma dada lista
+  'contaTerrenos' conta o número de terrenos consecutivos de um certo tipo
+  num dado mapa.
+
+  === Exemplo 
+
+  >>>  contarTerrenos Relva [(Relva , []),(Relva , []),(Rio 2, []),(Relva, [])]
+  2
 -}
 
 contarTerrenos :: Terreno 
@@ -170,7 +184,17 @@ contarTerrenos :: Terreno
 contarTerrenos t ts = contaConsecutivos (tipologiaTerreno t) $ map (\ (t,o) -> t) ts
 
 {- |
+  'tipologiaTerreno' ajuda na comparação de terrenos indepente da sua 
+  velocidade. Se ambos os terrenos forem to mesmo tipo, indepente da sua
+  velocidade, a função devolve True.
 
+  === Exemplo
+
+  >>> tipologiaTerreno (Rio 2) (Rio 3)
+  True
+
+  >>> tipologiaTerreno (Rio 2) (Estrada 4)
+  False
 -}
 
 tipologiaTerreno :: Terreno 
@@ -182,8 +206,16 @@ tipologiaTerreno Relva       Relva       = True
 tipologiaTerreno _           _           = False
 
 {- |
--- Função que conta os primeiros + ultimos elementos de um
--- Conjunto de Terrenos/Obstaculos
+  'contConsecutivos' conta os primeiros elementos que validam uma certa função
+  dentro de uma lista.
+
+  === Exemplos 
+
+  >>> contaConsecutivos (==2) [1,2,2]
+  0
+
+  >>> contaConsecutivos (==2) [2,2,1,2]
+  2
 -}
 
 contaConsecutivos :: (a -> Bool) 
@@ -192,20 +224,25 @@ contaConsecutivos :: (a -> Bool)
 contaConsecutivos f xs = length $ fst $ span f xs
 
 {- |
-  'adicionaObstaculos' é a função auxiliar de 'estendeMapa' que escolhe um 
-  terreno de uma lista de possiveis obstáculos repetidamente, até que o
-  a lista de obstáculos final tenha nº de elementos igual ao valor da 
-  largura do mapa. Esta lista é depois adicionada ao topo do mapa na função
-  principal 'estendeMapa'.
+  'adicionaObstaculos' é a função auxiliar de 'estendeMapa', que escolhe um
+  terreno de uma lista de possiveis obstáculos repetidamente, até que a
+  lista de obstáculos final tenha nº de elementos igual ao valor da largura
+  do mapa. Esta lista é depois adicionada ao topo do mapa na função principal
+  'estendeMapa'.
   Critérios usados nesta função:
 
   * Os obstaculos devem pertencer ao terreno adequado.
 
   === Exemplos :
 
-  >>> 
+  >>> adicionaObstaculos 3 3 (Estrada 2, [Nenhum])
+  [Nenhum,Carro,Carro]
 
+  >>> adicionaObstaculos 3 3 (Estrada 2, [])
+  [Nenhum,Carro,Carro]
 
+  >>> adicionaObstaculos 3 0 (Rio 1, [])
+  [Nenhum,Nenhum,Nenhum]
 -}
   
 adicionaObstaculos :: Int -- ^ largura do terreno
@@ -215,11 +252,13 @@ adicionaObstaculos :: Int -- ^ largura do terreno
                    -> (Terreno, [Obstaculo]) 
                    -> [Obstaculo]
 adicionaObstaculos l i t@(terr, o)
-  | l > lgt = adicionaObstaculos l i (terr, (o ++ [lto !! (mod i r)])) 
+  | l > (lgt * 2) = adicionaObstaculos l i (terr, (o ++ [lto !! (mod i r)]))
+  | l > lgt       = adicionaObstaculos l i (terr, (o ++ [lto !! (mod (i*2) r)]))
   | otherwise = o
   where lto = proximosObstaculosValidos l t
         lgt = length o
         r   = length lto
+
 {-
 -- se só falta um e não há nenhums -> nenhum
 -- para esta função admiti que um mapa tem pelo menos 2 de largura 
