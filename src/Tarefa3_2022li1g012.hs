@@ -117,6 +117,7 @@ velocidadeTerreno (Estrada n) = n
 animaLinha :: Largura                -- ^ Largura do mapa
            -> (Terreno, [Obstaculo]) -- ^ Linha a ser animada
            -> (Terreno, [Obstaculo]) -- ^ Linha no seu estado seguinte
+animaLinha 0 l = l
 animaLinha l (t, os)
   | vt <  0 = let (a, d) = splitAt v       os in (t, d ++ a)
   | vt == 0 = (t, os)
