@@ -20,5 +20,41 @@ import LI12223
 import Tarefa2_2022li1g012
 import Test.HUnit
 
+
+to1 = "lista vazia"         ~: Mapa 4 [(Relva,[Arvore,Arvore,Nenhum,Nenhum])]
+                            ~=? estendeMapa (Mapa 4 []) 5
+
+to2 = "lista com elementos" ~: Mapa 1 [(Relva,[Nenhum]),(Relva,[Nenhum])]     
+                            ~=? estendeMapa (Mapa 1 [(Relva, [Nenhum])]) 5
+
+to3 = "4 Rios seguidos"     ~: Mapa 1 [(Relva,[Nenhum]),(Rio 1,[Nenhum]),
+                                       (Rio (-1),[Nenhum]),(Rio 3,[Nenhum]),
+                                       (Rio (-4),[Nenhum])]
+                            ~=? estendeMapa (Mapa 1 [(Rio 1, [Nenhum]),
+                                                    (Rio (-1), [Nenhum]),
+                                                    (Rio 3, [Nenhum]),
+                                                    (Rio (-4), [Nenhum])]) 3
+
+to4 = "Rios consecutivos"   ~: Mapa 1 [(Rio (-1),[Nenhum]),(Rio 1,[Nenhum])]  
+                            ~=? estendeMapa (Mapa 1 [(Rio 1, [Nenhum])]) 3
+
+to5 = "5 Estradas seguidas" ~: Mapa 1 [(Rio 1,[Nenhum]),(Estrada 2,[Nenhum]),
+                                       (Estrada 2,[Nenhum]),(Estrada 2,[Nenhum]),
+                                       (Estrada 2,[Nenhum]),(Estrada 2,[Nenhum])]
+                            ~=? estendeMapa (Mapa 1 [(Estrada 2, [Nenhum]),
+                                                     (Estrada 2, [Nenhum]),
+                                                     (Estrada 2, [Nenhum]),
+                                                     (Estrada 2, [Nenhum]),
+                                                     (Estrada 2, [Nenhum])]) 2
+
+to6 = "5 Relvas seguidas"   ~: Mapa 1 [(Estrada 1,[Nenhum]),(Relva,[Nenhum]),
+                                       (Relva,[Nenhum]),(Relva,[Nenhum]),
+                                       (Relva,[Nenhum]),(Relva,[Nenhum])]
+                            ~=? Mapa 1 [(Estrada 1,[Nenhum]),(Relva,[Nenhum]),
+                                        (Relva,[Nenhum]),(Relva,[Nenhum]),
+                                        (Relva,[Nenhum]),(Relva,[Nenhum])]
+
+
+
 testsT2 :: Test
-testsT2 = TestLabel "Testes Tarefa 2" $ test ["Teste 1" ~: 1 ~=? 1]
+testsT2 = TestLabel "Testes Tarefa 2" $ test [to3]
