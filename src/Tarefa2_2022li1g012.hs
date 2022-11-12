@@ -73,6 +73,7 @@ import LI12223
 estendeMapa :: Mapa 
             -> Int -- ^ Inteiro de 0 a 100, fornece pseudoaleatóriedade na geração da linha  
             -> Mapa -- ^ Mapa com a nova linha adicionada
+estendeMapa (Mapa 0 (_)) i = Mapa 0 []
 estendeMapa m@(Mapa l []) i
   = Mapa l [(adicionaTerreno m i, adicionaObstaculos l i (t,[]))]
   where t = adicionaTerreno m i
@@ -106,16 +107,31 @@ adicionaTerreno :: Mapa
                        -}  
                 -> Terreno
 adicionaTerreno m@(Mapa l ((Rio v, _):_)) i
-  | v > 0 && verificarRio (ltp !! mod i r) vel = velocidadeTerreno (ltp !! mod i r) (-vel)
-  | otherwise = velocidadeTerreno (ltp !! mod i r) vel
-  where ltp = proximosTerrenosValidos m 
-        r = length ltp 
-        verificarRio t2 i = tipologiaTerreno t2 (Rio i)
-        vel = mod (length ltp) i   
-adicionaTerreno m i = velocidadeTerreno (ltp !! mod i r) vel
-  where ltp = proximosTerrenosValidos m 
-        r = length ltp
-        vel = mod (length ltp) i   
+  | v > 0 && verificarRio nterr (velTerreno i l) = velocidadeTerreno nterr (-(velTerreno i l))
+  | otherwise = velocidadeTerreno nterr (velTerreno i l)
+  where ltp               = proximosTerrenosValidos m 
+        nterr             = (ltp !! mod i r)
+        r                 = length ltp 
+        verificarRio t2 i = tipologiaTerreno t2 (Rio i)   
+adicionaTerreno m@(Mapa l (_)) i = velocidadeTerreno nterr (velTerreno i l)
+  where ltp   = proximosTerrenosValidos m 
+        r     = length ltp
+        nterr = (ltp !! mod i r)
+
+{- |
+  'velTerreno' fornece um valor de velocidade para um novo terreno gerado.
+
+  === Exemplo
+
+  >>> velTerreno 21 4
+  4
+-}
+
+velTerreno :: Int -> Int -> Int
+velTerreno i l 
+  | mod l i /= 0 = mod l i
+  | otherwise    = velTerreno (i+1) l
+
 
 {- |
   Fornece uma lista de terrenos possíveis segundo os seguintes críterios:
@@ -136,6 +152,7 @@ adicionaTerreno m i = velocidadeTerreno (ltp !! mod i r) vel
 
 proximosTerrenosValidos :: Mapa 
                         -> [Terreno]
+proximosTerrenosValidos (Mapa 0 [])    = []
 proximosTerrenosValidos (Mapa l [])    = [Rio 0, Estrada 0, Relva]
 proximosTerrenosValidos (Mapa l lns@((Rio v , _):_))
   | contarTerrenos (Rio v) lns     < 4 = [Rio 0, Estrada 0, Relva]
@@ -290,7 +307,8 @@ adicionaObstaculos l i t@(terr, o)
 proximosObstaculosValidos :: Int  -- ^ Comprimento final da lista
             -> (Terreno, [Obstaculo]) 
             -> [Obstaculo]
-proximosObstaculosValidos l (Rio _, [])                             
+proximosObstaculosValidos 0 _                                       = []
+proximosObstaculosValidos l (Rio _, [])                          
   | l > 1                                                           = [Nenhum, Tronco]
   | otherwise                                                       = [Nenhum]
 proximosObstaculosValidos l (Rio _, o)
