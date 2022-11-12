@@ -129,9 +129,9 @@ adicionaTerreno m@(Mapa l (_)) i = velocidadeTerreno nterr (velTerreno i l)
 
 velTerreno :: Int -> Int -> Int
 velTerreno i l 
-  | mod l i /= 0 = mod l i
+  | l == 1       = velTerreno i (l+1)
+  | mod i l /= 0 = mod i l
   | otherwise    = velTerreno (i+1) l
-
 
 {- |
   Fornece uma lista de terrenos possíveis segundo os seguintes críterios:
@@ -145,14 +145,13 @@ velTerreno i l
   >>> proximosTerrenosValidos (Mapa 3 [(Estrada 2, [])])
   [Rio 0,Estrada 0,Relva]
 
-  >>> proximosTerrenosValidos (Mapa 3 [(Rio 0,[]),(Rio 0,[]),(Rio 1,[]),
+  >>> proximosTerrenosValidos (Mapa 3 [(Rio 1,[]),(Rio (-4),[]),(Rio 1,[]),
                                        (Rio (-1),[])])
   [Estrada 0,Relva]
 -}
 
 proximosTerrenosValidos :: Mapa 
                         -> [Terreno]
-proximosTerrenosValidos (Mapa 0 [])    = []
 proximosTerrenosValidos (Mapa l [])    = [Rio 0, Estrada 0, Relva]
 proximosTerrenosValidos (Mapa l lns@((Rio v , _):_))
   | contarTerrenos (Rio v) lns     < 4 = [Rio 0, Estrada 0, Relva]
@@ -325,7 +324,7 @@ proximosObstaculosValidos l (Estrada _, o)
   | l       == lgt                                                  = []       
   | l - lgt == 1 && not (elem Nenhum o)                             = [Nenhum]
   | l - lgt == 1 && obstaculosCirculares o                      < 3 = [Nenhum, Carro] 
-  | l - lgt /= 1 && contaConsecutivos (== Tronco) (reverse o)   < 5 = [Nenhum, Carro]
+  | l - lgt /= 1 && contaConsecutivos (== Carro) (reverse o)    < 3 = [Nenhum, Carro]
   | otherwise                                                       = [Nenhum]
   where lgt = length o  
 proximosObstaculosValidos l (Relva, [])   
