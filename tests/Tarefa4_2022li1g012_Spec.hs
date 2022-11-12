@@ -23,29 +23,60 @@ import Test.HUnit
 -- Testes para colisão de obstáculos em diferentes linhas/terrenos:
 -- Estrada:
 
-to1 = "TesteEstradaFalse" ~: False ~=? jogoTerminou (Jogo (Jogador (1,1)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),(Estrada 1,[Carro,Nenhum,Carro])]))
-to2 = "TesteEstradaTrue"  ~: True  ~=? jogoTerminou (Jogo (Jogador (0,2)) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),(Relva,[Nenhum,Arvore,Arvore])]))
+to1 = "TesteEstradaFalse" 
+    ~: False 
+    ~=? jogoTerminou (Jogo (Jogador (1,1)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),
+                                                    (Estrada 1,[Carro,Nenhum,Carro])]))
+to2 = "TesteEstradaTrue"  
+    ~: True  
+    ~=? jogoTerminou (Jogo (Jogador (0,2)) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),
+                                                    (Relva,[Nenhum,Arvore,Arvore])]))
 
 -- Rio:
 
-to3 = "TesteRioTrue"      ~: True  ~=? jogoTerminou (Jogo (Jogador (0,0)) (Mapa 3 [(Rio 1,[Nenhum,Nenhum,Tronco]),(Estrada 1,[Carro,Nenhum,Carro])]))
-to4 = "TesteRioFalse"     ~: False ~=? jogoTerminou (Jogo (Jogador (2,1)) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),(Rio 2,[Nenhum,Nenhum,Tronco])]))
+to3 = "TesteRioTrue"      
+    ~: True  
+    ~=? jogoTerminou (Jogo (Jogador (0,0)) (Mapa 3 [(Rio 1,[Nenhum,Nenhum,Tronco]),
+                                                    (Estrada 1,[Carro,Nenhum,Carro])]))
+to4 = "TesteRioFalse"     
+    ~: False 
+    ~=? jogoTerminou (Jogo (Jogador (2,1)) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),
+                                                    (Rio 2,[Nenhum,Nenhum,Tronco])]))
 
 -- Relva:
 
-to5 = "TesteRelvaFalse"   ~: False ~=? jogoTerminou (Jogo (Jogador (0,0)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),(Estrada 1,[Carro,Nenhum,Carro])]))
-to6 = "TesteRelvaFalsel1" ~: False ~=? jogoTerminou (Jogo (Jogador (0,1)) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),(Relva,[Nenhum,Arvore,Arvore])]))
+to5 = "TesteRelvaFalse"   
+    ~: False 
+    ~=? jogoTerminou (Jogo (Jogador (0,0)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),
+                                                    (Estrada 1,[Carro,Nenhum,Carro])]))
+to6 = "TesteRelvaFalsel1" 
+    ~: False 
+    ~=? jogoTerminou (Jogo (Jogador (0,1)) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),
+                                                    (Relva,[Nenhum,Arvore,Arvore])]))
 
 -- Testes para quando o jogador se encontra fora do mapa:
 -- Por Cima/Baixo:
 
-to7 = "ForaMapaporBaixo"  ~: True  ~=? jogoTerminou (Jogo (Jogador (0,2)) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),(Relva,[Nenhum,Arvore,Arvore])]))
-to8 = "ForaMapaporCima"   ~: True  ~=? jogoTerminou (Jogo (Jogador (0,(-1))) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),(Relva,[Nenhum,Arvore,Arvore])]))   
+to7 = "ForaMapaporBaixo"  
+    ~: True  
+    ~=? jogoTerminou (Jogo (Jogador (0,2)) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),
+                                                    (Relva,[Nenhum,Arvore,Arvore])]))
+to8 = "ForaMapaporCima"   
+    ~: True 
+    ~=? jogoTerminou (Jogo (Jogador (0,(-1))) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),
+                                                       (Relva,[Nenhum,Arvore,Arvore])]))   
 
 -- Pela Esquerda/Direita:
 
-to9 = "ForaMapaDireita"   ~: True  ~=? jogoTerminou (Jogo (Jogador (3,0)) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),(Relva,[Nenhum,Arvore,Arvore])]))
-to10= "ForaMapaEsquerda"  ~: True  ~=? jogoTerminou (Jogo (Jogador ((-1),0)) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),(Relva,[Nenhum,Arvore,Arvore])]))
+to9 = "ForaMapaDireita"   
+    ~: True  
+    ~=? jogoTerminou (Jogo (Jogador (3,0)) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),
+                                                    (Relva,[Nenhum,Arvore,Arvore])]))
+
+to10= "ForaMapaEsquerda"  
+    ~: True  
+    ~=? jogoTerminou (Jogo (Jogador ((-1),0)) (Mapa 3 [(Estrada 1,[Carro,Nenhum,Carro]),
+                                                       (Relva,[Nenhum,Arvore,Arvore])]))
 
 
 testsT4 :: Test

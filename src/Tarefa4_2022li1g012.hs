@@ -35,13 +35,16 @@ import Data.Maybe
 
   === Exemplos
 
-  >>> jogoTerminou (Jogo (Jogador (1,1)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),(Estrada 1,[Carro,Nenhum,Carro])]))
+  >>> jogoTerminou (Jogo (Jogador (1,1)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),
+                                                  (Estrada 1,[Carro,Nenhum,Carro])]))
   False
 
-  >>> jogoTerminou (Jogo (Jogador (0,1)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),(Estrada 1,[Carro,Nenhum,Carro])]))
+  >>> jogoTerminou (Jogo (Jogador (0,1)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]), 
+                                                  (Estrada 1,[Carro,Nenhum,Carro])]))
   True
 
-  >>> jogoTerminou (Jogo (Jogador (3,1)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),(Estrada 1,[Carro,Nenhum,Carro])]))
+  >>> jogoTerminou (Jogo (Jogador (3,1)) (Mapa 3 [(Relva,[Nenhum,Arvore,Arvore]),
+                                                  (Estrada 1,[Carro,Nenhum,Carro])]))
   True
 -}
 
@@ -80,13 +83,16 @@ dentroMapaLados l (Jogador (x,y)) = x >= 0 && x < l
 
   === Exemplos
 
-  >>> linhaJogador (Jogador (1,1)) [(Rio 1, [Nenhum, Tronco]),(Estrada 1, [Carro, Nenhum])]
+  >>> linhaJogador (Jogador (1,1)) [(Rio 1, [Nenhum, Tronco]),
+                                    (Estrada 1, [Carro, Nenhum])]
   Just (Estrada 1,[Carro,Nenhum])
 
-  >>> linhaJogador (Jogador (1,0)) [(Relva, [Nenhum, Arvore]), (Estrada 1, [Carro, Nenhum])]
+  >>> linhaJogador (Jogador (1,0)) [(Relva, [Nenhum, Arvore]),
+                                    (Estrada 1, [Carro, Nenhum])]
   Just (Relva,[Nenhum,Arvore])
 
-  >>> linhaJogador (Jogador (0,2)) [(Relva, [Nenhum, Arvore]), (Estrada 1, [Carro, Nenhum])]
+  >>> linhaJogador (Jogador (0,2)) [(Relva, [Nenhum, Arvore]),
+                                    (Estrada 1, [Carro, Nenhum])]
   Nothing
 -}
 
@@ -100,7 +106,7 @@ linhaJogador (Jogador (x, y)) (l:ls)
   | otherwise = linhaJogador (Jogador (x, y - 1)) ls
 
 {-|
-  A função 'obstaculoAdequado'  @t o@ avalia se um obstáculo o@ é apropriado 
+  A função 'obstaculoAdequado'  @t o@ avalia se um obstáculo @o@ é apropriado 
   para o Jogador, ou se impede a sobrevivência do mesmo.
 
   Para esta função consideramos que o jogador não se pode encontrar na mesma
