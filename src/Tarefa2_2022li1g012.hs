@@ -106,14 +106,16 @@ adicionaTerreno :: Mapa
                        -}  
                 -> Terreno
 adicionaTerreno m@(Mapa l ((Rio v, _):_)) i
-  | v > 0 && verificarRio (ltp !! mod i r) i = velocidadeTerreno (ltp !! mod i r) (-i)
-  | otherwise = velocidadeTerreno (ltp !! mod i r) i
+  | v > 0 && verificarRio (ltp !! mod i r) vel = velocidadeTerreno (ltp !! mod i r) (-vel)
+  | otherwise = velocidadeTerreno (ltp !! mod i r) vel
   where ltp = proximosTerrenosValidos m 
         r = length ltp 
         verificarRio t2 i = tipologiaTerreno t2 (Rio i)
-adicionaTerreno m i = velocidadeTerreno (ltp !! mod i r) i
+        vel = mod (length ltp) i   
+adicionaTerreno m i = velocidadeTerreno (ltp !! mod i r) vel
   where ltp = proximosTerrenosValidos m 
         r = length ltp
+        vel = mod (length ltp) i   
 
 {- |
   Fornece uma lista de terrenos possíveis segundo os seguintes críterios:
@@ -233,8 +235,8 @@ contaConsecutivos f xs = length $ fst $ span f xs
 
   * Os obstaculos devem pertencer ao terreno adequado.
 
-  === Exemplos :
-
+  === Exemplos 
+  
   >>> adicionaObstaculos 3 3 (Estrada 2, [Nenhum])
   [Nenhum,Carro,Carro]
 
@@ -259,17 +261,30 @@ adicionaObstaculos l i t@(terr, o)
         lgt = length o
         r   = length lto
 
-{-
--- se só falta um e não há nenhums -> nenhum
--- para esta função admiti que um mapa tem pelo menos 2 de largura 
--- otherwise -> qualquer outra coisa valida (nenhum, obstaculo caso comprimento correto)
-* Troncos têm, no máximo, 5 unidades de comprimento.
+{- |
+  'proximosObstaculosValidos' devolve uma lista de possíveis obstáculos para
+  uma única posição num dado terreno; seguindo os seguintes critérios:
+
+  * Troncos têm, no máximo, 5 unidades de comprimento.
 
   * Carro têm, no máximo, 3 unidades de comprimento.
 
   * O mapa é circular.
 
   * Existe pelo menos um obstáculo @Nenhum@ em cada linha.
+
+  === Exemplos
+  
+  Restrições por circularidade:
+  >>> proximosObstaculosValidos 5 (Estrada 2, [Carro,Nenhum,Carro,Carro])
+  [Nenhum]
+  
+  Nenhum obstáculo @Nenhum@ ainda presentes na linha:
+  >>> proximosObstaculosValidos 1 (Relva, [])
+  [Nenhum]
+
+  >>> proximosObstaculosValidos 3 (Relva, [Arvore, Arvore])
+  [Nenhum]
 -}
 
 proximosObstaculosValidos :: Int  -- ^ Comprimento final da lista
@@ -279,6 +294,7 @@ proximosObstaculosValidos l (Rio _, [])
   | l > 1                                                           = [Nenhum, Tronco]
   | otherwise                                                       = [Nenhum]
 proximosObstaculosValidos l (Rio _, o)
+  | l       == lgt                                                  = []  
   | l - lgt == 1 && not (elem Nenhum o)                             = [Nenhum]
   | l - lgt == 1 && obstaculosCirculares o                      < 5 = [Nenhum, Tronco] 
   | l - lgt /= 1 && contaConsecutivos (== Tronco) (reverse o)   < 5 = [Nenhum, Tronco]
@@ -288,6 +304,7 @@ proximosObstaculosValidos l (Estrada _, [])
   | l > 1                                                           = [Nenhum, Carro]
   | otherwise                                                       = [Nenhum]                      
 proximosObstaculosValidos l (Estrada _, o)
+  | l       == lgt                                                  = []       
   | l - lgt == 1 && not (elem Nenhum o)                             = [Nenhum]
   | l - lgt == 1 && obstaculosCirculares o                      < 3 = [Nenhum, Carro] 
   | l - lgt /= 1 && contaConsecutivos (== Tronco) (reverse o)   < 5 = [Nenhum, Carro]
@@ -297,16 +314,26 @@ proximosObstaculosValidos l (Relva, [])
   | l > 1                                                           = [Nenhum, Arvore]
   | otherwise                                                       = [Nenhum]                                                                   
 proximosObstaculosValidos l (Relva, o)
+  | l       == lgt                                                  = []  
   | l - lgt == 1 && not (elem Nenhum o)                             = [Nenhum]
   | otherwise                                                       = [Nenhum, Arvore]
   
   where lgt = length o
--- Função Auxiliar de validação de obstáculos
 
--- Funcões Auxiliares para "proximosObstaculosValidos"
--- Quando no final da lista, verifica a circularidade do
--- Mapa calculando a quantidade de obstáculos do inicio
--- E o do fim da lista dada 
+{- |
+  'obstaculosCirculares' devolve o número de obstáculos consecutivos do ínicio
+  e do fim de uma lista, se estes forem todos iguais. Caso o obstáculo final
+  seja diferente do incial, apenas devolve a contagem dos obstáculos iniciais.
+
+  === Exemplos
+
+  >>> obstaculosCirculares [Carro,Nenhum,Carro,Nenhum,Carro,Carro]
+  3
+
+  >>> obstaculosCirculares [Carro,Carro,Nenhum,Carro,Nenhum]
+  2
+
+-}
 
 obstaculosCirculares :: [Obstaculo] 
                      -> Int
