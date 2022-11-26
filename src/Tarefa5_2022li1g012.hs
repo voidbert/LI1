@@ -33,7 +33,7 @@ deslizaJogo j
 
 adicionaLinha :: Jogo -> Jogo
 adicionaLinha (Jogo (Jogador (x,y)) (Mapa larg t))
-  = let i = y
+  = let i = mod y 100 
     in (Jogo (Jogador (x,y+1)) (estendeMapa (Mapa larg t) i))
 
 removeLFinal :: Jogo -> Jogo
