@@ -27,7 +27,7 @@ mapa) de acordo com os critérios em:
 -}
 module Tarefa3_2022li1g012 (
   -- * Funções expostas
-  animaJogo, animaMapa, animaLinha, animaJogador,
+  animaJogo, animaMapa, animaMapa', animaLinha, animaLinha', animaJogador,
   -- * Funções e tipos de dados auxiliares
   -- ** Gerais
   mIndice, velocidadeTerreno, deslocamento,
@@ -60,8 +60,8 @@ import Data.Maybe
   >>> mIndice [10, 43, 21] 3
   Nothing
 -}
-mIndice :: [a] -- ^ A lista onde encontrar o elemento
-        -> Int -- ^ O índice do elemento desejado
+mIndice :: [a]     -- ^ A lista onde encontrar o elemento
+        -> Int     -- ^ O índice do elemento desejado
         -> Maybe a -- ^ O elemento caso exista
 mIndice [] n = Nothing
 mIndice (x:xs) n
@@ -92,7 +92,8 @@ velocidadeTerreno (Estrada n) = n
   Obstáculos em terrenos com velocidade \(v\), movem-se \(|v|\) posições para a
   direita ou para a esquerda, caso \(v\) seja positivo ou negativo,
   respetivamente. Quando, no seu movimento, um obstáculo sai das bordas da
-  linha é colocado no início da mesma (mapa circular).
+  linha é colocado no início da mesma (mapa circular). Ver 'animaLinha'' para a
+  versão utilizada na implementação prática.
 
   === Notas
 
@@ -127,10 +128,66 @@ animaLinha l (t, os)
   | vt >  0 = let (a, d) = splitAt (l - v) os in (t, d ++ a)
   where vt = velocidadeTerreno t
         v = mod (abs vt) l
+{-|
+  'animaLinha'' apresenta um comportamento semelhante a 'animaLinha'. No
+  entanto, para o movimento de uma @Estrada@ quando o jogador é atropelado. Tal
+  é necessário para 'Tarefa4_2022li1g012.jogoTerminou' funcionar perfeitamente
+  em @Estrada@s de alta velocidade (assim é impossível o @Carro@ atravessar o
+  jogador sem o atropelar).
+
+  === Implementação
+
+  'animaLinha'' recorre a 'animaLinha' para animar linhas onde o jogador não
+  se encontra, e nas em que se encontra mas que não são estradas. Para um
+  jogador se encontrar numa linha, a sua coordenada vertical é nula. Quando o
+  jogador se encontra numa estrada, essa é animada várias vezes com velocidade
+  de apenas 1 ou -1, até um dos seguintes:
+
+  1. Um carro atropela o jogador (estão na mesma posição);
+  2. A @Estrada@ move-se todas as unidades desejadas (@Estrada 5@ move-se uma
+      unidade para a direita 5 vezes).
+
+  === Exemplos:
+
+  A @Estrada@ apenas se move uma unidade para parar o @Carro@ quando atropela o
+  jogador:
+
+  >>> animaLinha' 4 (Jogador (1, 0)) (Estrada 2, [Carro, Nenhum, Nenhum, Carro])
+  (Estrada 2, [Carro, Carro, Nenhum, Nenhum])
+
+  Não há atropelamento:
+
+  >>> animaLinha' 4 (Jogador (0, 0)) (Estrada 1, [Nenhum, Nenhum, Carro, Nenhum])
+  (Estrada 1, [Nenhum, Nenhum, Nenhum, Carro])
+
+  Uso de 'animaLinha', dado que o jogador não está na @Estrada@ em questão.
+
+  >>> animaLinha' 4 (Jogador (3, 5)) (Estrada 3, [Carro, Carro, Nenhum, Nenhum])
+  (Estrada 3, [Carro, Nenhum, Nenhum, Carro])
+-}
+animaLinha' :: Largura                -- ^ Largura do mapa
+            -> Jogador                -- ^ Posição do jogador
+            -> (Terreno, [Obstaculo]) -- ^ Linha a ser animada
+            -> (Terreno, [Obstaculo]) -- ^ Linha no seu estado seguinte
+animaLinha' l (Jogador (x, 0)) (Estrada n, os)
+  -- Evitar função parcial (fora do mapa, o que não deve acontecer)
+  | x < 0 || x >= l = animaLinha l (Estrada n, os)
+  | n == 0    = (Estrada n, os)
+  -- zip [0..] é usado para se saber o índice da linha em predicado (quantas
+  -- movimentações elementares)
+  | otherwise = (Estrada n, snd $ last $ takeWhilePlusOne predicado $
+      zip [0..] $ iterate (step n) os)
+  where takeWhilePlusOne p = foldr (\ x r -> if p x then (x:r) else [x]) []
+        step n o
+          | n > 0 = snd (animaLinha l (Estrada    1, o))
+          | n < 0 = snd (animaLinha l (Estrada (-1), o))
+        predicado (i, ls) = (ls !! x) /= Carro && i < abs n
+animaLinha' l _ (t, os) = animaLinha l (t, os)
 
 {-|
   'animaMapa' move todas as linhas de um mapa __válido__ com recurso a
-  'animaLinha'.
+  'animaLinha'. Ver 'animaMapa'' para a versão utilizada na implementação
+  prática.
 
   === Notas
 
@@ -146,6 +203,28 @@ animaLinha l (t, os)
 animaMapa :: Mapa -- ^ Atual mapa
           -> Mapa -- ^ Mapa para a jogada seguinte
 animaMapa (Mapa l lns) = Mapa l $ map (animaLinha l) lns
+
+{-|
+  'animaMapa'' apresenta um comportamento semelhante a 'animaMapa', mas que
+  para @Carro@s que tentem atropelar o jogador (ver 'animaLinha'').
+
+  === Exemplo
+
+  >>> animaMapa' (Mapa 3 [ (Rio (-1) , [Tronco, Tronco, Nenhum]),
+                         (Relva    , [Nenhum, Nenhum, Arvore]),
+                         (Estrada 2, [Carro, Nenhum, Nenhum])])
+                 (Jogador (1, 2))
+  Mapa 3 [ (Rio (-1) , [Tronco, Nenhum, Tronco]),
+           (Relva    , [Nenhum, Nenhum, Arvore]),
+	   (Estrada 2, [Nenhum, Carro, Nenhum])]
+-}
+animaMapa' :: Mapa    -- ^ Atual mapa
+           -> Jogador -- ^ Jogador (para situações de atropelamento)
+           -> Mapa    -- ^ Mapa para a jogada seguinte
+animaMapa' (Mapa l [])       _                   = Mapa l []
+animaMapa' (Mapa l (ln:lns)) jgd@(Jogador (x,y)) =
+  Mapa l (animaLinha' l jgd ln : n)
+    where (Mapa _ n) = animaMapa' (Mapa l lns) (Jogador (x, y - 1))
 
 {-|
   Um par de duas linhas, devolvido por 'linhasJogador'. A primeira linha
@@ -172,7 +251,7 @@ type Obstaculos2 = (Maybe (Terreno, Obstaculo), Maybe (Terreno, Obstaculo))
   >>> deslocamento (Move Direita)
   (1, 0)
 -}
-deslocamento :: Jogada -- ^ Movimento desejado do jogador
+deslocamento :: Jogada      -- ^ Movimento desejado do jogador
              -> Coordenadas -- ^ Vetor deslocamento
 deslocamento Parado          = (0,    0)
 deslocamento (Move Cima)     = (0, (-1))
@@ -239,7 +318,7 @@ linhasJogador (Jogador (_,y)) _ (Mapa _ lns) = (ln, ln)
 -}
 obstaculoLinha :: Int -- ^ Posição do obstáculo na linha
                -> Maybe (Terreno, [Obstaculo]) -- ^ Linha onde está o obstáculo
-               -> Maybe (Terreno, Obstaculo) -- ^ Obstáculo (caso exista)
+               -> Maybe (Terreno, Obstaculo)   -- ^ Obstáculo (caso exista)
 obstaculoLinha _ Nothing = Nothing
 obstaculoLinha n (Just (ter, obs))
   | isNothing mobs = Nothing
@@ -266,9 +345,9 @@ obstaculoLinha n (Just (ter, obs))
   >>> obstaculosJogador (Jogador (0, 2)) (Move Esquerda) m
   (Just (Estrada 1, Nenhum), Nothing)
 -}
-obstaculosJogador :: Jogador -- ^ Jogador (pela sua posição)
-                  -> Jogada -- ^ Movimento (ou ausência dele) do jogador
-                  -> Mapa -- ^ Mapa onde se encontra o jogador
+obstaculosJogador :: Jogador     -- ^ Jogador (pela sua posição)
+                  -> Jogada      -- ^ Movimento (ou ausência dele) do jogador
+                  -> Mapa        -- ^ Mapa onde se encontra o jogador
                   -> Obstaculos2 -- ^ Obstáculos atual e possível seguinte
 obstaculosJogador jgd@(Jogador (xi, yi)) j m = (o1, o2)
   where (l1, l2) = linhasJogador jgd j m
@@ -329,8 +408,8 @@ obstaculosJogador jgd@(Jogador (xi, yi)) j m = (o1, o2)
   Jogador (2, 1)
 -}
 animaJogador :: Jogador -- ^ Jogador
-             -> Jogada -- ^ Intenção de movimento do jogador
-             -> Mapa -- ^ Mapa, para verificação de obstáculos e correntes de rios
+             -> Jogada  -- ^ Intenção de movimento do jogador
+             -> Mapa    -- ^ Mapa, para verificação de obstáculos e correntes de rios
              -> Jogador -- ^ Jogador com posição atualizada
 animaJogador jgd@(Jogador (x,y)) j m = Jogador (x + dx, y + dy)
   where (to1, to2) = obstaculosJogador jgd j m
@@ -365,19 +444,14 @@ animaJogador jgd@(Jogador (x,y)) j m = Jogador (x + dx, y + dy)
   mapa.
   5. Ao deslocar os obstáculos de uma linha, assim que desaparecerem por um dos
   lados do mapa, devem reaparecer no lado oposto.
-  6. O efeito de deslize do mapa não é para ser implementado nesta função. Por
+  6. O jogador não pode ficar sobreposto a uma árvore.
+  7. No movimento entre rios e outros terrenos, não há qualquer movimento
+  lateral do jogador.
+  8. Na animação de uma estrada, a linha pode parar antes da sua animação total
+  caso um carro atropele o jogador.
+  9. O efeito de deslize do mapa não é para ser implementado nesta função. Por
   outras palavras, as dimensões do mapa não devem sofrer alterações após
   invocar esta função.
-
-  __Adições__
-
-  Como explicitado pela Doutora Olga Pachego (omp@di.uminho.pt) após uma
-  questão minha, a função verifica colisões com árvores, i.e., o jogador não
-  pode ficar sobreposto a uma árvore após uma jogada.
-
-  Foi esclarecido pelo docente Xavier Gomes Pinho (d12736@di.uminho.pt) que a
-  corrente de rios não influencia movimentos verticais, apenas a ausência de
-  movimento e movimentos laterais.
 
   === Notas
 
@@ -399,8 +473,9 @@ animaJogador jgd@(Jogador (x,y)) j m = Jogador (x + dx, y + dy)
   Para outros exemplos, consulte como o mapa e o jogador são modificados em
   'animaMapa' e 'animaJogador', respetivamente.
 -}
-animaJogo :: Jogo -- ^ Estado atual do jogo
+animaJogo :: Jogo   -- ^ Estado atual do jogo
           -> Jogada -- ^ Jogada efetuada pelo jogador
-          -> Jogo -- ^ Jogo atualizado
-animaJogo (Jogo jgd m) j = (Jogo (animaJogador jgd j m) (animaMapa m))
+          -> Jogo   -- ^ Jogo atualizado
+animaJogo (Jogo jgd m) j = (Jogo jgd2 (animaMapa' m jgd2))
+  where jgd2 = animaJogador jgd j m
 
