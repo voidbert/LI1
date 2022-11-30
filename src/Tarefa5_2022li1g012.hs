@@ -15,27 +15,80 @@
 -}
 
 {- |
-Module      : Tarefa4_2022li1g012
+Module      : Tarefa5_2022li1g012
 Description : Determinar se o jogo terminou
 Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
               Humberto Gil Azevedo Sampaio Gomes <a104348@alunos.uminho.pt>
 
-Módulo para a realização da Tarefa 4 do projeto de LI1 em 2022/23.
+Módulo para a realização da Tarefa 5 do projeto de LI1 em 2022/23.
 -}
 module Tarefa5_2022li1g012 where
 
 import Tarefa2_2022li1g012
 import LI12223
 
-deslizaJogo :: Jogo -> Jogo
-deslizaJogo j
-  = removeLFinal (adicionaLinha j)
+{- |
+  A função 'deslizaJogo' acrescenta uma nova linha ao topo do @Mapa@ e retira a 
+  final de modo a que este mantenha o seu comprimento original; além de
+  corrigir a posição do jogador adicionando +1 à sua coordenada y, de modo a
+  que exista um efeito de deslize com que o jogador fique para trás. Esta 
+  função usufrui de duas auxiliares.
+  
+  === Exemplos
 
-adicionaLinha :: Jogo -> Jogo
-adicionaLinha (Jogo (Jogador (x,y)) (Mapa larg t))
-  = let i = mod y 100 
-    in (Jogo (Jogador (x,y+1)) (estendeMapa (Mapa larg t) i))
+  >>> deslizaJogo 2 (Jogo (Jogador  (1,2)) 
+                    (Mapa 5 [(Rio 1, [Tronco,Tronco,Nenhum,Tronco,Tronco]),
+                    (Estrada 2,[Carro,Carro,Nenhum,Carro,Nenhum])]))                         
+  Jogo (Jogador (1,2)) (Mapa 5 [(Rio (-3),[Tronco,Tronco,Tronco,Nenhum,Nenhum]),
+                                (Rio 1, [Tronco,Tronco,Nenhum,Tronco,Tronco])])
+  
+  >>> deslizaJogo 5 (Jogo (Jogador  (1,0)) 
+                    (Mapa 5 [(Rio 1, [Tronco,Tronco,Nenhum,Tronco,Tronco]),
+                             (Estrada 2,[Carro,Carro,Nenhum,Carro,Nenhum])]))
+  Jogo (Jogador (1,1)) (Mapa 5 [(Relva,[Arvore,Arvore,Arvore,Nenhum,Nenhum]),
+                                (Rio 1,[Tronco,Tronco,Nenhum,Tronco,Tronco])])
+-}
 
-removeLFinal :: Jogo -> Jogo
+deslizaJogo :: Int  -- ^ Inteiro aleatório de 0 a 100
+            -> Jogo -- ^ Posição do jogador e @Mapa@
+            -> Jogo
+deslizaJogo v j
+  = removeLFinal $ adicionaLinha v j
+
+{- |
+  A função 'adicionaLinha' apenas adicinona uma nova linha ao topo do @Mapa@ com
+  o auxilio de um número aleatório de 0 a 100 e altera as coordenadas do jogador.
+  
+  === Exemplo
+
+  >>> adicionaLinha 2 (Jogo (Jogador (1,1)) 
+                      (Mapa 5 [(Relva,[Arvore,Arvore,Arvore,Nenhum,Nenhum])]))
+  Jogo (Jogador (1,2)) (Mapa 5 [(Rio 3,[Tronco,Tronco,Tronco,Nenhum,Nenhum]),
+                                (Relva,[Arvore,Arvore,Arvore,Nenhum,Nenhum])])
+-}
+
+
+adicionaLinha :: Int  -- ^ Inteiro aleatório de 0 a 100 
+              -> Jogo -- ^ Posição do jogador e @Mapa@
+              -> Jogo
+adicionaLinha v (Jogo (Jogador (x,y)) (Mapa larg t))
+  = let i = mod (y + v) 100 
+    in Jogo (Jogador (x,y+1)) (estendeMapa (Mapa larg t) i)
+
+{- |
+  A funcão 'removeLFinal' remove a linha final do @Jogo@ fornecido pela função
+  'adicionaLinha' descrita anteriormente.
+
+  === Exemplo 
+
+  >>> removeLFinal (Jogo (Jogador (1,2)) 
+                   (Mapa 5 [(Rio 3,[Tronco,Tronco,Tronco,Nenhum,Nenhum]),
+                            (Relva,[Arvore,Arvore,Arvore,Nenhum,Nenhum])]))
+  Jogo (Jogador (1,2)) (Mapa 5 [(Rio 3,[Tronco,Tronco,Tronco,Nenhum,Nenhum])])
+-}
+
+
+removeLFinal :: Jogo -- ^ Posição do jogador e @Mapa@
+             -> Jogo
 removeLFinal (Jogo (Jogador (x,y)) (Mapa larg t))
   = Jogo (Jogador (x,y)) (Mapa larg (init t))
