@@ -52,13 +52,18 @@ l12 = "EstMod-" ~: (Estrada (-8), [Carro, Carro, Nenhum, Carro, Nenhum, Carro])
 
 l13 = "Parcial1" ~: (Rio 2,     []) ~=? animaLinha 0 (Rio 2,     [])
 l14 = "Parcial2" ~: (Estrada 0, []) ~=? animaLinha 0 (Estrada 0, [])
+l15 = "Parcial3" ~: (Estrada 6, []) ~=?
+  animaLinha' 0 (Jogador (0, 0)) (Estrada 6, [])
+l16 = "Parcial4" ~: (Estrada 0, []) ~=?
+  animaLinha' 0 (Jogador (0, 0)) (Estrada 0, [])
+l17 = "Parcial5" ~: (Relva, []) ~=? animaLinha' 0 (Jogador (0, 0)) (Relva, [])
 
 -- Teste de composição: mover uma linha n elementos para a direita de uma vez
 -- deve ser igual a mover essa linha 1 elemento para a direita n vezes
-animaLinha' :: Largura -> (Terreno, [Obstaculo]) -> (Terreno, [Obstaculo])
-animaLinha' l (t, o) = if velocidadeTerreno t == 0 then
+animaLinha'' :: Largura -> (Terreno, [Obstaculo]) -> (Terreno, [Obstaculo])
+animaLinha'' l (t, o) = if velocidadeTerreno t == 0 then
                          (t, o) else (t, snd $ animaLinha l (t1, on))
-  where (_, on)  = animaLinha' l (t2, o)
+  where (_, on)  = animaLinha'' l (t2, o)
         (t1, t2) = case t of
                      Relva     -> (Relva, Relva)
                      Rio n     -> if n > 0 then (Rio 1, Rio (n - 1))
@@ -66,9 +71,27 @@ animaLinha' l (t, o) = if velocidadeTerreno t == 0 then
                      Estrada n -> if n > 0 then (Estrada 1, Estrada (n - 1))
                                     else (Estrada (-1), Rio (n + 1))
 
-l15 = "Composta" ~: True ~=? all
-  (\ n -> animaLinha' 5 (Rio n, lrio) == animaLinha 5 (Rio n, lrio)) [-10..10]
+l18 = "Composta" ~: True ~=? all
+  (\ n -> animaLinha'' 5 (Rio n, lrio) == animaLinha 5 (Rio n, lrio)) [-10..10]
 
+-- Testes de animaLinha'
+obs = [Carro, Carro, Nenhum, Nenhum, Nenhum, Carro]
+
+l1' = "Atrop1" ~: (snd $ animaLinha 6 (Estrada 3, obs)) ~=?
+  (snd $ animaLinha' 6 (Jogador (4, 0)) (Estrada 4, obs))
+-- Paragem do movimento e atropelamento simultâneos
+l2' = "Atrop2" ~: animaLinha 6 (Estrada 2, obs) ~=?
+  animaLinha' 6 (Jogador (3, 0)) (Estrada 2, obs)
+l3' = "Atrop3" ~: animaLinha 6 (Estrada (-2), obs) ~=?
+  animaLinha' 6 (Jogador (2, 0)) (Estrada (-2), obs) -- Não atropela
+l4' = "Atrop4" ~: (snd $ animaLinha 6 (Estrada (-3), obs)) ~=?
+  (snd $ animaLinha' 6 (Jogador (2, 0)) (Estrada (-8), obs)) -- Modularidade
+l5' = "Atrop5" ~: animaLinha' 6 (Jogador (4, -3)) (Estrada 4, obs) ~=?
+  animaLinha 6 (Estrada 4, obs) -- Esta não é a linha em que o jogador está
+l6' = "Atrop6" ~: animaLinha' 2 (Jogador (0, 0)) (Rio 1, [Nenhum, Tronco]) ~=?
+  (Rio 1, [Tronco, Nenhum]) -- Não é estrada
+l7' = "Atrop7" ~: animaLinha' 6 (Jogador (5, 0)) (Estrada 1, obs) ~=?
+  (Estrada 1, obs) -- sobreposição carro / jogador
 
 
 -- Testes dos obstáculos do jogador (onde está e para onde deseja ir)
@@ -167,7 +190,9 @@ ajg = "Jogo" ~: Jogo (Jogador (3, 1)) ma ~=?
 testsT3 :: Test
 testsT3 = TestLabel "Testes Tarefa 3" $ test [
   TestLabel "Testes de Linhas individuais" $ test [
-    l1, l2, l3, l4, l5, l6, l7, l8, l9, l11, l12, l13, l14, l15 ],
+    l1, l2, l3, l4, l5, l6, l7, l8, l9, l11, l12, l13, l14, l15, l16, l17 ],
+  TestLabel "Testes de atropelamentos" $ test [
+    l1', l2', l3', l4', l5', l6', l7' ],
   TestLabel "Testes de obstaculosJogador" $ test [
     oj1, oj2, oj3, oj4, oj5, oj6, oj7, oj8, oj9, oj10, oj11, oj12, oj13 ],
   TestLabel "Testes de animaJogador" $ test [
