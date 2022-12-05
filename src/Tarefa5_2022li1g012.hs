@@ -36,10 +36,10 @@ import LI12223
   
   === Exemplos
 
-  >>> deslizaJogo 2 (Jogo (Jogador  (1,2)) 
+  >>> deslizaJogo 1 (Jogo (Jogador  (1,2)) 
                     (Mapa 5 [(Rio 1, [Tronco,Tronco,Nenhum,Tronco,Tronco]),
                     (Estrada 2,[Carro,Carro,Nenhum,Carro,Nenhum])]))                         
-  Jogo (Jogador (1,2)) (Mapa 5 [(Rio (-3),[Tronco,Tronco,Tronco,Nenhum,Nenhum]),
+  Jogo (Jogador (1,3)) (Mapa 5 [(Rio (-3),[Tronco,Tronco,Tronco,Nenhum,Nenhum]),
                                 (Rio 1, [Tronco,Tronco,Nenhum,Tronco,Tronco])])
   
   >>> deslizaJogo 5 (Jogo (Jogador  (1,0)) 
