@@ -19,11 +19,12 @@ module LI12223 (
   -- ** Jogo
   Jogo(..), Jogador(..), Direcao(..), Jogada(..),
   -- ** Estados de jogo
-  DadosJogo(..), FuncoesJogo(..), EstadoJogo(..)
+  BMPs(..), DadosJogo(..), FuncoesJogo(..), EstadoJogo(..)
   ) where
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
+import Codec.BMP
 
 -- | Velocidade que irá afetar a movimentação dos 'Obstaculo's de um 'Mapa'.
 type Velocidade = Int
@@ -85,6 +86,13 @@ data Jogada
 
 
 {-|
+  Lista de imagens necessárias ao longo do jogo.
+-}
+data BMPs = BMPs {
+  fonte :: BitmapData
+  }
+
+{-|
   Dados associados a um 'EstadoJogo', necessários de serem passados de
   atualização em atualização ou de frame em frame.
 -}
@@ -105,6 +113,8 @@ data FuncoesJogo = FJ (Float -> EstadoJogo -> IO EstadoJogo) -- ^ Passagem de te
   Um 'EstadoJogo' representa um menu ou o o jogo em si. É constituído por dados
   que são transmitidos de atualização para atualização ('DadosJogo') e funções
   responsáveis pela atualização e representação no ecrã ('FuncoesJogo').
+  Ademais, a lista de imagens necessárias é também incluída.
 -}
 data EstadoJogo = EJ DadosJogo   -- ^ Informação a ser mantida entre atualizações
                      FuncoesJogo -- ^ Funções de atualização e renderização
+                     (IO BMPs)   -- ^ Imagens necessárias para o jogo
