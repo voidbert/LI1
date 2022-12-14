@@ -22,22 +22,35 @@ Ou por HTTPS:
 $ git clone https://gitlab.com/uminho-di/li1/2223/projetos/2022li1g012.git
 ```
 
-### Interpretador
+### Correr e instalar o jogo
 
-De momento, o programa não tem um ponto de entrada, pelo que deve usar o cabal
-para iniciar o interpretador:
+Para correr o programa (compilação automática do projeto e das dependências):
 
 ```bash
-$ cabal repl
+$ cabal run exe:2022li1g012
+```
+
+Para instalar o jogo:
+
+```bash
+$ cabal install exe:2022li1g012
 ```
 
 ## Desenvolvimento
+
+### Interpretador
+
+Para testar funções durante o processo de desenvolvimento, o `ghci` é iniciado com:
+
+```bash
+$ cabal repl exe:2022li1g012
+```
 
 ### Testes
 
 O projeto utiliza a biblioteca
 [HUnit](https://hackage.haskell.org/package/HUnit) para fazer testes unitários.
-ParJosa os executar:
+Para os executar:
 
 ```bash
 $ cabal test
