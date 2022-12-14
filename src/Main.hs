@@ -92,11 +92,7 @@ texto = "Olá mundo!\n" ++ dourado "0123456789\n" ++ "0123456789\nDiacríticos!"
 renderizarMenu (EJ _ _ b) = do
   bmps <- b
   ((x, y), txt) <- return $ mrTexto (fonte bmps) TCentro texto
-  return $ Scale 2 2 $ Pictures [ txt,
-    Color white $ Line [(-200, 0), (200, 0)],
-    Color white $ Line [(0, -200), (0, 200)],
-    Color white $ rectangleWire x y]
-
+  return $ Scale 2 2 $ botao (fonte bmps) "Botão com duas\nlinhas de texto"
 
 -- | Ponto de entrada do programa, onde se abre a janela com o jogo.
 main :: IO ()

@@ -132,3 +132,44 @@ mrTexto b a s = ((w, h), Pictures final)
         h = fromIntegral (8 * length lns)
         final = map (uncurry $ alinharLn a w h) $ zip [0..] rnd
 
+
+{-|
+  'botao' gera uma imagem de um botão com algum texto. Todos os botões têm o
+  mesmo grafismo: retângulos de cantos circulares de fundo ciano escuro, com
+  texto e contornos brancos.
+-}
+botao :: BitmapData -- ^ Imagem da fonte
+      -> String     -- ^ Texto do botão
+      -> Picture    -- ^ Imagem a ser renderizada
+botao b s = Pictures [
+  -- Fundo
+  rc,
+  Translate (-4 - w / 2) 0 rl,
+  Translate (4  + w / 2) 0 rl,
+
+  Translate (-w / 2) (-h / 2) c,
+  Translate (-w / 2) (h / 2)  c,
+  Translate (w / 2)  (h / 2)  c,
+  Translate (w / 2)  (-h / 2) c,
+
+  -- Contornos
+  Translate (-w / 2) (-h / 2) $ arc' 2,
+  Translate (-w / 2) (h / 2)  $ arc' 1,
+  Translate (w / 2)  (h / 2)  $ arc' 0,
+  Translate (w / 2)  (-h / 2) $ arc' 3,
+
+  Translate 0 (-8 - h / 2) hl, Translate 0 (8 + h / 2) hl,
+  Translate (-8 - w / 2) 0 vl, Translate (8 + w / 2) 0 vl,
+
+  t
+  ]
+  where clr = makeColorI 00 140 140 255
+        ((w, h), t) = mrTexto b TCentro s
+        -- Fundo do botão (retângulos no centro e círculos nos cantos)
+        rc = Color clr $ rectangleSolid w (h + 16)
+        rl = Color clr $ rectangleSolid 8       h
+        c  = Color clr $ circleSolid    8
+        -- Contornos do botão
+        arc' n = Color white $ ThickArc (90 * n) (90 * (n + 1)) 8 2
+        hl = Color white $ rectangleSolid w 2
+        vl = Color white $ rectangleSolid 2 h
