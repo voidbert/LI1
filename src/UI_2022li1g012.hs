@@ -134,14 +134,15 @@ mrTexto b a s = ((w, h), Pictures final)
 
 
 {-|
-  'botao' gera uma imagem de um botão com algum texto. Todos os botões têm o
-  mesmo grafismo: retângulos de cantos circulares de fundo ciano escuro, com
-  texto e contornos brancos.
+  'mrBotao' gera uma imagem de um botão com algum texto, que é devolvida
+  juntamente com as dimensões do mesmo. Todos os botões têm o mesmo grafismo:
+  retângulos de cantos circulares de fundo ciano escuro, com texto e contornos
+  brancos.
 -}
-botao :: BitmapData -- ^ Imagem da fonte
-      -> String     -- ^ Texto do botão
-      -> Picture    -- ^ Imagem a ser renderizada
-botao b s = Pictures [
+mrBotao :: BitmapData                -- ^ Imagem da fonte
+        -> String                    -- ^ Texto do botão
+        -> ((Float, Float), Picture) -- ^ Dimensões e imagem do botão
+mrBotao b s = ((w + 16, h + 16), Pictures [
   -- Fundo
   rc,
   Translate (-4 - w / 2) 0 rl,
@@ -162,7 +163,7 @@ botao b s = Pictures [
   Translate (-8 - w / 2) 0 vl, Translate (8 + w / 2) 0 vl,
 
   t
-  ]
+  ])
   where clr = makeColorI 00 140 140 255
         ((w, h), t) = mrTexto b TCentro s
         -- Fundo do botão (retângulos no centro e círculos nos cantos)

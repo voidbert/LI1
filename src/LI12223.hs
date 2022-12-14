@@ -19,7 +19,7 @@ module LI12223 (
   -- ** Jogo
   Jogo(..), Jogador(..), Direcao(..), Jogada(..),
   -- ** Estados de jogo
-  BMPs(..), DadosJogo(..), FuncoesJogo(..), EstadoJogo(..)
+  Assets(..), DadosJogo(..), FuncoesJogo(..), EstadoJogo(..)
   ) where
 
 import Graphics.Gloss
@@ -86,9 +86,9 @@ data Jogada
 
 
 {-|
-  Lista de imagens necessárias ao longo do jogo.
+  Lista de imagens / sons / outros necessários ao longo do jogo.
 -}
-data BMPs = BMPs {
+data Assets = Assets {
   fonte :: BitmapData
   }
 
@@ -117,4 +117,4 @@ data FuncoesJogo = FJ (Float -> EstadoJogo -> IO EstadoJogo) -- ^ Passagem de te
 -}
 data EstadoJogo = EJ DadosJogo   -- ^ Informação a ser mantida entre atualizações
                      FuncoesJogo -- ^ Funções de atualização e renderização
-                     (IO BMPs)   -- ^ Imagens necessárias para o jogo
+                     (IO Assets)   -- ^ Imagens necessárias para o jogo

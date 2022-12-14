@@ -61,10 +61,8 @@ tempoGloss t j@(EJ _ (FJ a _ _) _) = a t j
 
 -- | 'lerBMP' lê um ficheiro do tipo bitmap.
 lerBMP :: FilePath -> IO BMP
-lerBMP fp = do
-  be <- readBMP fp
-  filterError be
-  where filterError (Left _)  = error ("Erro a ler bitmap " ++ fp)
+lerBMP fp = readBMP fp >>= filterError
+  where filterError (Left  _) = error ("Erro a ler bitmap " ++ fp)
         filterError (Right i) = return i
 
 {-|
@@ -74,11 +72,14 @@ lerBMP fp = do
 lerPicture :: FilePath -> IO Picture
 lerPicture x = lerBMP x >>= (return . bitmapOfBMP)
 
--- | Lê todas as imagens necessárias para o funcionamento do jogo
-lerImagens :: IO BMPs
-lerImagens = do
+{-|
+  'lerAssets' carrega do disco todos os recursos (imagens, sons, ...)
+  necessários para o funcionamento do jogo.
+-}
+lerAssets :: IO Assets
+lerAssets = do
   fnt <- lerBMP "assets/export/Font.bmp"
-  return (BMPs (bitmapDataOfBMP fnt))
+  return (Assets (bitmapDataOfBMP fnt))
 
 
 -- TODO - remover. Isto é para testagem apenas.
@@ -92,12 +93,12 @@ texto = "Olá mundo!\n" ++ dourado "0123456789\n" ++ "0123456789\nDiacríticos!"
 renderizarMenu (EJ _ _ b) = do
   bmps <- b
   ((x, y), txt) <- return $ mrTexto (fonte bmps) TCentro texto
-  return $ Scale 2 2 $ botao (fonte bmps) "Botão com duas\nlinhas de texto"
+  return $ Scale 2 2 $ snd $ mrBotao (fonte bmps) "Botão com duas\nlinhas de texto"
 
 -- | Ponto de entrada do programa, onde se abre a janela com o jogo.
 main :: IO ()
 main = do
   playIO janela black 60 inicial renderizarGloss eventosGloss tempoGloss
-  where janela = InWindow "Crossy Road" (512, 512) (0, 0)
-        inicial = EJ (MenuP (0, 0) 0) (FJ tempoMenu eventoMenu renderizarMenu) $ lerImagens
+  where janela = InWindow "Crossy Road" (768, 768) (0, 0)
+        inicial = EJ (MenuP (0, 0) 0) (FJ tempoMenu eventoMenu renderizarMenu) $ lerAssets
 
