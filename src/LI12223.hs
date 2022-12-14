@@ -5,6 +5,8 @@ Copyright   : Manuel Barros <d13242@di.uminho.pt>
               Nelson Estevão <d12733@di.uminho.pt>
               Olga Pacheco <omp@di.uminho.pt>
               Xavier Pinho <d12736@di.uminho.pt>
+              Humberto Gomes <a104348@alunos.uminho.pt>
+              José Lopes <a104541@alunos.uminho.pt>
 
 Tipos de dados e funções auxiliares para a realização do projeto de LI1 em 2022/23.
  -}
@@ -14,9 +16,15 @@ module LI12223 (
   Coordenadas , Largura , Velocidade,
   -- ** Mapas
   Mapa(..), Terreno(..), Obstaculo(..),
-    -- ** Jogo
-  Jogo(..), Jogador(..), Direcao(..), Jogada(..)
+  -- ** Jogo
+  Jogo(..), Jogador(..), Direcao(..), Jogada(..),
+  -- ** Estados de jogo
+  Assets(..), DadosJogo(..), FuncoesJogo(..), EstadoJogo(..)
   ) where
+
+import Graphics.Gloss
+import Graphics.Gloss.Interface.IO.Game
+import Codec.BMP
 
 -- | Velocidade que irá afetar a movimentação dos 'Obstaculo's de um 'Mapa'.
 type Velocidade = Int
@@ -75,3 +83,38 @@ data Jogada
   = Parado -- ^ tipo que define a ausência de uma acção do 'Jogador'
   | Move Direcao -- ^ um movimento do jogador numa determinada 'Direcao'
   deriving (Show, Read, Eq)
+
+
+{-|
+  Lista de imagens / sons / outros necessários ao longo do jogo.
+-}
+data Assets = Assets {
+  fonte :: BitmapData
+  }
+
+{-|
+  Dados associados a um 'EstadoJogo', necessários de serem passados de
+  atualização em atualização ou de frame em frame.
+-}
+data DadosJogo = MenuP
+                   (Float, Float) -- ^ Posição do rato
+                   Float -- ^ Frametime (para testagem)
+               | Play
+
+{-|
+  Funções associadas a um 'EstadoJogo', responsáveis pela sua atualização após
+  passagem de tempo e eventos do jogador, e pela representação do jogo no ecrã.
+-}
+data FuncoesJogo = FJ (Float -> EstadoJogo -> IO EstadoJogo) -- ^ Passagem de tempo
+                      (Event -> EstadoJogo -> IO EstadoJogo) -- ^ Reação a eventos
+                      (EstadoJogo -> IO Picture) -- ^ Renderizar o jogo
+
+{-|
+  Um 'EstadoJogo' representa um menu ou o o jogo em si. É constituído por dados
+  que são transmitidos de atualização para atualização ('DadosJogo') e funções
+  responsáveis pela atualização e representação no ecrã ('FuncoesJogo').
+  Ademais, a lista de imagens necessárias é também incluída.
+-}
+data EstadoJogo = EJ DadosJogo   -- ^ Informação a ser mantida entre atualizações
+                     FuncoesJogo -- ^ Funções de atualização e renderização
+                     (IO Assets)   -- ^ Imagens necessárias para o jogo
