@@ -20,7 +20,14 @@ Description : Ponto de entrada para o programa
 Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
               Humberto Gil Azevedo Sampaio Gomes <a104348@alunos.uminho.pt>
 -}
-module Main where
+module Main (
+  -- * Ponto de entrada
+  main,
+  -- * Gloss
+  renderizarGloss, eventosGloss, tempoGloss,
+  -- * Leitura de assets
+  lerBMP, lerPicture, lerAssets
+  ) where
 
 import Data.Maybe
 import Graphics.Gloss
@@ -28,7 +35,7 @@ import Graphics.Gloss.Interface.IO.Game
 import Codec.BMP
 
 import LI12223
-import UI_2022li1g012
+import MenuP_2022li1g012
 
 {-|
   'renderizarGloss', dado um estado de jogo, devolve os conteúdos que devem ser
@@ -81,24 +88,10 @@ lerAssets = do
   fnt <- lerBMP "assets/export/Font.bmp"
   return (Assets (bitmapDataOfBMP fnt))
 
-
--- TODO - remover. Isto é para testagem apenas.
-tempoMenu t (EJ (MenuP xy _) f b) = return $ EJ (MenuP xy t) f b
-
-eventoMenu (EventMotion (x, y)) (EJ (MenuP _ t) f b) =
-  return $ EJ (MenuP (x, y) t) f b
-eventoMenu _ e = return e
-
-texto = "Olá mundo!\n" ++ dourado "0123456789\n" ++ "0123456789\nDiacríticos!"
-renderizarMenu (EJ _ _ b) = do
-  bmps <- b
-  ((x, y), txt) <- return $ mrTexto (fonte bmps) TCentro texto
-  return $ Scale 2 2 $ snd $ mrBotao (fonte bmps) "Botão com duas\nlinhas de texto"
-
 -- | Ponto de entrada do programa, onde se abre a janela com o jogo.
 main :: IO ()
 main = do
+  let janela = InWindow "Crossy Road" (768, 768) (0, 0)
+  assets <- lerAssets
+  inicial <- inicializarMenu assets
   playIO janela black 60 inicial renderizarGloss eventosGloss tempoGloss
-  where janela = InWindow "Crossy Road" (768, 768) (0, 0)
-        inicial = EJ (MenuP (0, 0) 0) (FJ tempoMenu eventoMenu renderizarMenu) $ lerAssets
-

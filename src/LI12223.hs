@@ -26,6 +26,8 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import Codec.BMP
 
+import UI_2022li1g012
+
 -- | Velocidade que irá afetar a movimentação dos 'Obstaculo's de um 'Mapa'.
 type Velocidade = Int
 
@@ -98,7 +100,7 @@ data Assets = Assets {
 -}
 data DadosJogo = MenuP
                    (Float, Float) -- ^ Posição do rato
-                   Float -- ^ Frametime (para testagem)
+                   [Botao]
                | Play
 
 {-|
@@ -117,4 +119,4 @@ data FuncoesJogo = FJ (Float -> EstadoJogo -> IO EstadoJogo) -- ^ Passagem de te
 -}
 data EstadoJogo = EJ DadosJogo   -- ^ Informação a ser mantida entre atualizações
                      FuncoesJogo -- ^ Funções de atualização e renderização
-                     (IO Assets)   -- ^ Imagens necessárias para o jogo
+                     Assets      -- ^ Imagens necessárias para o jogo
