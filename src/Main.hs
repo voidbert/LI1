@@ -20,7 +20,14 @@ Description : Ponto de entrada para o programa
 Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
               Humberto Gil Azevedo Sampaio Gomes <a104348@alunos.uminho.pt>
 -}
-module Main where
+module Main (
+  -- * Ponto de entrada
+  main,
+  -- * Gloss
+  renderizarGloss, eventosGloss, tempoGloss,
+  -- * Leitura de assets
+  lerBMP, lerPicture, lerAssets
+  ) where
 
 import Data.Maybe
 import Graphics.Gloss
@@ -28,7 +35,7 @@ import Graphics.Gloss.Interface.IO.Game
 import Codec.BMP
 
 import LI12223
-import UI_2022li1g012
+import MenuP_2022li1g012
 
 {-|
   'renderizarGloss', dado um estado de jogo, devolve os conteúdos que devem ser
@@ -80,29 +87,6 @@ lerAssets :: IO Assets
 lerAssets = do
   fnt <- lerBMP "assets/export/Font.bmp"
   return (Assets (bitmapDataOfBMP fnt))
-
-
--- TODO - remover. Isto é para testagem apenas.
-
-txts = [ "Botao mais longo", "Três\nLinhas\nno botão", dourado "Dourado: 999" ]
-
-tempoMenu _ = return
-
-eventoMenu (EventMotion (x, y)) (EJ (MenuP _ t) f b) =
-  return $ EJ (MenuP (x, y) t) f b
-eventoMenu _ e = return e
-
-renderizarMenu (EJ (MenuP p bts) _ b) = return $ Pictures (map aux bts ++ [
-  Color white $ Line [(-768, 0), (768, 0)],
-  Color white $ Line [(0, -768), (0, 768)]])
-  where aux (r, (p1, p2)) = if dentro r p then p2 else p1
-
-funcoesMenu = FJ tempoMenu eventoMenu renderizarMenu
-
-inicializarMenu :: Assets -> IO EstadoJogo
-inicializarMenu a = return $ EJ (MenuP (0, 0) bts) funcoesMenu a
-  where bts = gerarBotoesEsp (fonte a) 15 3 txts
-
 
 -- | Ponto de entrada do programa, onde se abre a janela com o jogo.
 main :: IO ()
