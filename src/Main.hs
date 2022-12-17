@@ -83,22 +83,31 @@ lerAssets = do
 
 
 -- TODO - remover. Isto é para testagem apenas.
-tempoMenu t (EJ (MenuP xy _) f b) = return $ EJ (MenuP xy t) f b
+
+txts = [ "Botao mais longo", "Três\nLinhas\nno botão", dourado "Dourado: 999" ]
+
+tempoMenu _ = return
 
 eventoMenu (EventMotion (x, y)) (EJ (MenuP _ t) f b) =
   return $ EJ (MenuP (x, y) t) f b
 eventoMenu _ e = return e
 
-texto = "Olá mundo!\n" ++ dourado "0123456789\n" ++ "0123456789\nDiacríticos!"
-renderizarMenu (EJ _ _ b) = do
-  bmps <- b
-  ((x, y), txt) <- return $ mrTexto (fonte bmps) TCentro texto
-  return $ Scale 2 2 $ snd $ mrBotao (fonte bmps) "Botão com duas\nlinhas de texto"
+renderizarMenu (EJ (MenuP p bts) _ b) = return $ Pictures (map aux bts ++ [
+  Color white $ Line [(-768, 0), (768, 0)],
+  Color white $ Line [(0, -768), (0, 768)]])
+  where aux (r, (p1, p2)) = if dentro r p then p2 else p1
+
+funcoesMenu = FJ tempoMenu eventoMenu renderizarMenu
+
+inicializarMenu :: Assets -> IO EstadoJogo
+inicializarMenu a = return $ EJ (MenuP (0, 0) bts) funcoesMenu a
+  where bts = gerarBotoesEsp (fonte a) 15 3 txts
+
 
 -- | Ponto de entrada do programa, onde se abre a janela com o jogo.
 main :: IO ()
 main = do
+  let janela = InWindow "Crossy Road" (768, 768) (0, 0)
+  assets <- lerAssets
+  inicial <- inicializarMenu assets
   playIO janela black 60 inicial renderizarGloss eventosGloss tempoGloss
-  where janela = InWindow "Crossy Road" (768, 768) (0, 0)
-        inicial = EJ (MenuP (0, 0) 0) (FJ tempoMenu eventoMenu renderizarMenu) $ lerAssets
-
