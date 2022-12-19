@@ -62,6 +62,6 @@ inicializarErroM :: Assets        -- ^ Assets do jogo
 inicializarErroM a s = return $ EJ (ErroM (0, 0) txt bt') funcoesMenuP a
   where txt = Scale 2 2 $ snd $ mrTexto (fonte a) TCentro s
         bt@((_, (_, h)), _) = scaleBt 2 $ mrBotao (fonte a) "Menu Principal"
-        bt' = translateBt 0 (-384 + h / 2 + 16) bt
+        bt' = translateBt 0 (-384 + h / 2 + 8) bt
         funcoesMenuP = FJ tempoErroM eventoErroM renderizarErroM
 

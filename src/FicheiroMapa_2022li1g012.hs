@@ -21,8 +21,8 @@ Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
               Humberto Gil Azevedo Sampaio Gomes <a104348@alunos.uminho.pt>
 -}
 module FicheiroMapa_2022li1g012 (
-  -- * Listagem de mapas
-  listarMapas, diretoriaMapas, nomeMapa,
+  -- * Listagem e gestão de mapas
+  listarMapas, diretoriaMapas, nomeMapa, apagarMapa,
   -- * Exportação e importação de mapas
   mapaStr, parseMapa,
   -- * Funções auxiliares
@@ -50,9 +50,10 @@ diretoriaMapas = do
 
 -- | 'listarMapas' devolve a lista de ficheiros @.map@ em 'diretoriaMapas'
 listarMapas :: IO [FilePath]
-listarMapas = diretoriaMapas >>=
-              listDirectory >>=
-              (return . filter (endsWith ".map"))
+listarMapas = do
+  d <- diretoriaMapas
+  l <- listDirectory d
+  return $ map (d </>) $ filter (endsWith ".map") l
   where endsWith c s = (drop (length s - length c) s) == c
 
 {-|
@@ -66,7 +67,15 @@ listarMapas = diretoriaMapas >>=
 nomeMapa :: FilePath -> String
 nomeMapa = dropExtension . takeFileName
 
-
+{-|
+  'apagarmapa' apaga um ficheiro de mapa e devolve se a operação teve (ou não)
+  sucesso.
+-}
+apagarMapa :: FilePath -> IO Bool
+apagarMapa f = do
+  s <- tryIOError (removeFile f)
+  case s of (Left _)  -> return False
+            (Right _) -> return True
 
 {-|
   'terrenoStr' converte o 'Terreno' de uma linha para uma 'String', para ser

@@ -33,7 +33,7 @@ import Graphics.Gloss.Interface.IO.Game
 
 import LI12223
 import UI_2022li1g012
-import ErroM_2022li1g012 (inicializarErroM)
+import MenuF_2022li1g012
 
 -- | 'tempoMenuP' reage à passagem do tempo (nenhuma)
 tempoMenuP :: Float -> EstadoJogo -> IO EstadoJogo
@@ -48,7 +48,7 @@ eventoMenuP (EventMotion (x, y)) (EJ (MenuP _ bts) f b) =
   return $ EJ (MenuP (x, y) bts) f b
 eventoMenuP (EventKey (MouseButton LeftButton) Up _ (x, y))
             ej@(EJ (MenuP _ bts) _ a)
-  | dentro (fst (bts !! 1)) (x, y) = inicializarErroM a "Ocorreu um erro a\n\nlistar os mapas :("
+  | dentro (fst (bts !! 1)) (x, y) = inicializarMenuF a 0
   | dentro (fst (bts !! 2)) (x, y) = exitSuccess -- Botão sair
 eventoMenuP _ e = return e
 
@@ -56,19 +56,18 @@ eventoMenuP _ e = return e
 renderizarMenuP :: EstadoJogo -> IO Picture
 renderizarMenuP (EJ (MenuP p bts) _ b) = return $ Pictures [
   Translate 0 250 $ Scale 9 9 $ snd $ mrTexto (fonte b) TCentro "Crossy\nRoad",
-  Pictures $ map imagemBotao bts,
+  Pictures $ map (imagemBotao p) bts,
   Translate (384 - w / 2 - 8) (h / 2 - 384 + 8) cpr
   ]
-  where imagemBotao (r, (p1, p2)) = if dentro r p then p2 else p1
-        ((w, h), cpr) = mrTexto (fonte b) TCentro
+  where ((w, h), cpr) = mrTexto (fonte b) TCentro
           "(C) Humberto Gomes & José Lopes"
 
 
 -- | 'inicializarMenu' devolve o estado inicial do menu principal.
 inicializarMenu :: Assets -> IO EstadoJogo
 inicializarMenu a = return $ EJ (MenuP (0, 0) bts) funcoesMenuP a
-  where bts = map (translateBt 0 (-120)) $
-          gerarBotoesEsp (fonte a) 15 3 textoBotoes
+  where bts = map (translateBt 0 (-120)) $ snd $
+          gerarBotoesEspV (fonte a) 15 3 textoBotoes
         textoBotoes = [ "Modo infinito", "Modo frogger", "Sair" ]
         funcoesMenuP = FJ tempoMenuP eventoMenuP renderizarMenuP
 
