@@ -56,7 +56,9 @@ cliqueLinhas :: EstadoJogo -- ^ Estado do jogo
              -> IO EstadoJogo
 cliqueLinhas ej@(EJ (MenuF _ _ [] _) _ _) = return ej
 cliqueLinhas ej@(EJ (MenuF p v (x@(fp, _, _):xs) b) f as)
-  | a == Nenhuma = cliqueLinhas $ EJ (MenuF p v xs b) f as
+  | a == Nenhuma = (cliqueLinhas $ EJ (MenuF p v xs b) f as) >>=
+                   (\ (EJ (MenuF _ _ xs' _) _ _) ->
+                      return $ EJ (MenuF p v (x:xs') b) f as)
   | a == Editar  = return ej -- TODO
   | a == Jogar   = return ej -- TODO
   | a == Apagar  = do apg <- apagarMapa fp
