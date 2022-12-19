@@ -20,7 +20,12 @@ Description : Menu principal do jogo
 Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
               Humberto Gil Azevedo Sampaio Gomes <a104348@alunos.uminho.pt>
 -}
-module MenuP_2022li1g012 where
+module MenuP_2022li1g012 (
+  -- * Funções expostas
+  inicializarMenu,
+  -- * Funções internas
+  tempoMenuP, eventoMenuP, renderizarMenuP
+) where
 
 import System.Exit (exitSuccess)
 import Graphics.Gloss
@@ -28,6 +33,7 @@ import Graphics.Gloss.Interface.IO.Game
 
 import LI12223
 import UI_2022li1g012
+import ErroM_2022li1g012 (inicializarErroM)
 
 -- | 'tempoMenuP' reage à passagem do tempo (nenhuma)
 tempoMenuP :: Float -> EstadoJogo -> IO EstadoJogo
@@ -41,7 +47,8 @@ eventoMenuP :: Event -> EstadoJogo -> IO EstadoJogo
 eventoMenuP (EventMotion (x, y)) (EJ (MenuP _ bts) f b) =
   return $ EJ (MenuP (x, y) bts) f b
 eventoMenuP (EventKey (MouseButton LeftButton) Up _ (x, y))
-            ej@(EJ (MenuP _ bts) _ _)
+            ej@(EJ (MenuP _ bts) _ a)
+  | dentro (fst (bts !! 1)) (x, y) = inicializarErroM a "Ocorreu um erro a\n\nlistar os mapas :("
   | dentro (fst (bts !! 2)) (x, y) = exitSuccess -- Botão sair
 eventoMenuP _ e = return e
 

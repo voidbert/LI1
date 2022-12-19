@@ -105,6 +105,10 @@ data DadosJogo = MenuP
                    (Float, Float)
                    [Botao]
                    String
+               | ErroM
+                   (Float, Float) -- ^ Posição do rato
+                   Picture        -- ^ Mensagem de erro (renderizada)
+                   Botao          -- ^ Botão de regresso ao menu
                | Play
 
 {-|
