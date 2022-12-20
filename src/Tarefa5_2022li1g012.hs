@@ -16,7 +16,7 @@
 
 {- |
 Module      : Tarefa5_2022li1g012
-Description : Determinar se o jogo terminou
+Description : Deslize do mapa
 Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
               Humberto Gil Azevedo Sampaio Gomes <a104348@alunos.uminho.pt>
 
