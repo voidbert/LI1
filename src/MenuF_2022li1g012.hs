@@ -24,13 +24,22 @@ module MenuF_2022li1g012 (
   -- * Funções expostas
   inicializarMenuF,
   -- * Funções internas
-  tempoMenuF, eventoMenuF, renderizarMenuF, renderizarLinha,
-  linhaMenu, linhasMenu
+  -- ** Geração do menu
+  linhaMenu, linhasMenu,
+  -- ** Gloss
+  tempoMenuF, eventoMenuF, renderizarMenuF,
+  -- ** Renderização
+  renderizarLinha,
+  -- ** Reação a eventos
+  Acao(..), cliqueLinha, cliqueLinhas, limitarScroll,
+  -- ** Comuns
+  translateLinha, dentroRegiaoLinhas
 ) where
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import System.IO.Error
+import Data.List
 
 import LI12223
 import UI_2022li1g012
@@ -42,9 +51,29 @@ import {-# SOURCE #-} MenuP_2022li1g012 -- módulos mutuamente recursivos
 tempoMenuF :: Float -> EstadoJogo -> IO EstadoJogo
 tempoMenuF _ = return
 
+{-|
+  'translateLinha' faz uma translação vertical de uma linha do menu conforme
+  o deslocamento vertical (scroll).
+-}
+translateLinha :: Float                        -- ^ Scroll
+               -> (FilePath, Picture, [Botao]) -- ^ Linha
+               -> (FilePath, Picture, [Botao]) -- ^ Linha com translação
+translateLinha s (fp, p, bts) = let y = s * 16 in
+  (fp, Translate 0 y p, map (translateBt 0 y) bts)
+
+{-|
+  Uma ação consequente de um clique do rato numa linha (conforme o botão
+  pressionado). Ver 'cliqueLinha'.
+-}
 data Acao = Nenhuma | Apagar | Editar | Jogar deriving (Eq, Show)
 
-cliqueLinha :: (Float, Float) -> (FilePath, Picture, [Botao]) -> Acao
+{-|
+  'cliqueLinha' verifica se o utilizador clicou em algum botão de uma linha,
+  devolvendo a 'Acao' correspondente que deve ser executada.
+-}
+cliqueLinha :: (Float, Float)               -- ^ Posição do cursor
+            -> (FilePath, Picture, [Botao]) -- ^ Linha em análise
+            -> Acao                         -- ^ Consequência do clique
 cliqueLinha p (_, _, [(r1, _), (r2, _), (r3, _)])
   | dentro r1 p = Apagar
   | dentro r2 p = Editar
@@ -52,19 +81,56 @@ cliqueLinha p (_, _, [(r1, _), (r2, _), (r3, _)])
   | otherwise = Nenhuma
 cliqueLinha _ (_, _, _) = Nenhuma -- não é suposto acontecer
 
-cliqueLinhas :: EstadoJogo -- ^ Estado do jogo
-             -> IO EstadoJogo
-cliqueLinhas ej@(EJ (MenuF _ _ [] _) _ _) = return ej
+{-|
+  'cliqueLinhas' verifica se o utilizador carregou num botão das várias linhas
+  no menu, alterando o estado de jogo conforme aplicável (não fazer nada,
+  apagar mapas, abrir editor ou abrir jogo). Também é devolvida a ação
+  efetuada, caso seja necessário.
+-}
+cliqueLinhas :: EstadoJogo            -- ^ Estado do jogo
+             -> IO (Acao, EstadoJogo) -- ^ Estado seguinte e ação executada
+cliqueLinhas ej@(EJ (MenuF _ _ [] _) _ _) = return (Nenhuma, ej)
 cliqueLinhas ej@(EJ (MenuF p v (x@(fp, _, _):xs) b) f as)
-  | a == Nenhuma = (cliqueLinhas $ EJ (MenuF p v xs b) f as) >>=
-                   (\ (EJ (MenuF _ _ xs' _) _ _) ->
-                      return $ EJ (MenuF p v (x:xs') b) f as)
-  | a == Editar  = return ej -- TODO
-  | a == Jogar   = return ej -- TODO
+  | a == Nenhuma = (cliqueLinhas $ EJ (MenuF p v xs b) f as) >>= (seguintes x a)
+  | a == Editar  = return (Editar, ej) -- TODO
+  | a == Jogar   = return (Jogar,  ej) -- TODO
   | a == Apagar  = do apg <- apagarMapa fp
-                      if apg then inicializarMenuF as v -- Reler pasta
+                      if apg then inicializarMenuF as v >>=
+                                  (\ e -> return (Apagar, e))
                         else inicializarErroM as "Erro ao apagar\n\no mapa :("
-  where a = cliqueLinha p x
+                             >>= (\ e -> return (Apagar, e))
+  where a = cliqueLinha p $ translateLinha v x
+        -- Analisar a linha seguinte. Caso alguma ação seja executada, ignorar
+        -- as linhas anteriores e executar essa ação. Senão, continuar com
+        -- todas as linhas.
+        seguintes x' ac (Nenhuma, (EJ (MenuF p' v' xs' b') f' a')) =
+          return $ (ac, EJ (MenuF p' v' (x':xs') b') f' a')
+        seguintes _ _ (ac, f) = return (ac, f)
+
+{-|
+  'limitarScroll' limita a posição vertical das linhas a valores aceitáveis
+  (não passar dos limites e nenhuma linha ser mostrada, por exemplo).
+-}
+limitarScroll :: [(FilePath, Picture, [Botao])] -- ^ Linhas do menu
+              -> Float                          -- ^ Deslocamento vertical
+              -> Float                          -- ^ Deslocamento adequado
+limitarScroll lns v
+  | v < 0     = 0
+  | v > maxv  = maxv
+  | otherwise = v
+  where l = fromIntegral $ length lns
+        maxv = if l > 9 then (4 * l - 37) else 0
+
+{-|
+  'dentroRegiaoLinhas' verifica se o cursor se encontra numa região onde pode
+  clicar nos botões das linhas dos mapas (para não carregar em botões
+  escondidos). Também é útil para determinar se se pode mostrar um botão com ou
+  sem highlight.
+-}
+dentroRegiaoLinhas :: EstadoJogo -- ^ Estado de jogo (posição do rato e botões)
+                   -> Bool       -- ^ Verdadeiro se na região das linhas
+dentroRegiaoLinhas (EJ (MenuF (_, y) _ _ bts) _ _) =
+  y >= 32 + (snd $ snd $ fst (bts !! 0)) - 384 && y <= 384 - 72
 
 {-|
   'eventoMenuF' reage ao input do utilizador (movimento do rato e cliques em
@@ -75,27 +141,40 @@ eventoMenuF (EventMotion (x, y)) (EJ (MenuF _ v l bts) f b) =
   return $ EJ (MenuF (x, y) v l bts) f b
 eventoMenuF (EventKey (MouseButton LeftButton) Up _ (x, y))
             ej@(EJ (MenuF _ v l bts) _ b)
-  -- TODO - quando scroll for implementado, não esquecer de não carregar em
-  -- botões escondidos
   | dentro (fst (bts !! 1)) (x, y) = inicializarMenu b
-  | otherwise = cliqueLinhas ej
+  | not $ dentroRegiaoLinhas ej = return ej
+  | otherwise = cliqueLinhas ej >>= (return . snd)
+eventoMenuF (EventKey (MouseButton WheelUp) Down _ _)
+  (EJ (MenuF p v l bts) f b) = return $ EJ (MenuF p v' l bts) f b
+  where v' = limitarScroll l (v - 1)
+eventoMenuF (EventKey (MouseButton WheelDown) Down _ _)
+  (EJ (MenuF p v l bts) f b) = return $ EJ (MenuF p v' l bts) f b
+  where v' = limitarScroll l (v + 1)
 eventoMenuF _ e = return e
 
 -- | 'renderizarLinha' gera a imagem para renderizar um mapa da lista
-renderizarLinha :: (Float, Float)               -- ^ Posição do rato
+renderizarLinha :: EstadoJogo                   -- ^ Estado do jogo
                 -> (FilePath, Picture, [Botao]) -- ^ Linha
                 -> Picture                      -- ^ Imagem produzida
-renderizarLinha p (_, t, bts) = Pictures (t : map (imagemBotao p) bts)
+renderizarLinha e (_, t, bts) = Pictures (t : map (imagemBotao' e) bts)
+  -- Não mostrar um botão com highlight se estiver obstruído
+  where imagemBotao' e@(EJ (MenuF p _ _ _) _ _) b@(_, (p1,_)) =
+          if dentroRegiaoLinhas e then imagemBotao p b else p1
 
 -- | 'renderizarMenuF' é responsável por desenhar o menu no ecrã.
 renderizarMenuF :: EstadoJogo -> IO Picture
-renderizarMenuF (EJ (MenuF p v l bts) _ b) = return $ Pictures (
-  t : map (imagemBotao p) bts ++ linhas)
+renderizarMenuF ej@(EJ (MenuF p v l bts) _ b) = return $ Pictures
+  (linhas ++ botoes ++ t)
   where t = let ((_, h), t') = mrTexto (fonte b) TCentro "Escolha um mapa"
-            in Translate 0 (384 - 16 - h * 2.5) $ Scale 5 5 t'
+            in [ Translate 0 (384 - 16 - h * 2.5) $ Color black $
+                 rectangleSolid 768 (h * 5 + 32),
+                 Translate 0 (384 - 16 - h * 2.5) $ Scale 5 5 t' ]
+        botoes = let ((_, (_, h)), _) = bts !! 0
+                 in (Translate 0 (-384 + h / 2 + 16) $ Color black $
+                    rectangleSolid 768 (h + 32)) : map (imagemBotao p) bts
         linhas = if null l then [Scale 2 2 $ snd $
                    mrTexto (fonte b) TCentro "Sem mapas instalados"]
-                   else map (renderizarLinha p) l
+                   else map (renderizarLinha ej . translateLinha v) l
 
 {-|
   'linhaMenu' gera uma linha deste menu, com o nome de um mapa e opções como
@@ -116,7 +195,9 @@ linhaMenu b v fp = (fp, t', bts')
   'linhasMenu' gera todas as linhas deste menu, uma para cada mapa (ver
   'linhaMenu').
 -}
-linhasMenu :: BitmapData -> [FilePath] -> [(FilePath, Picture, [Botao])]
+linhasMenu :: BitmapData                     -- ^ Imagem da fonte
+           -> [FilePath]                     -- ^ Lista de mapas
+           -> [(FilePath, Picture, [Botao])] -- ^ Lista de linhas
 linhasMenu b = map (uncurry $ linhaMenu b) . zip [0..]
 
 -- | 'inicializarMenuF' devolve o estado inicial deste menu.
@@ -132,6 +213,7 @@ inicializarMenuF a v = do
   ms <- tryIOError $ listarMapas
   case ms of (Left _) -> inicializarErroM a
                            "Ocorreu um erro a\n\nlistar os mapas :("
-             (Right m) -> let lns = linhasMenu (fonte a) m
+             (Right m) -> let lns = linhasMenu (fonte a) $ sort m
                               bts = [b1', b2']
-                          in return $ EJ (MenuF (0, 0) v lns bts) funcoesMenuF a
+                              v' = limitarScroll lns v
+                          in return $ EJ (MenuF (0, 0) v' lns bts) funcoesMenuF a
