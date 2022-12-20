@@ -101,6 +101,10 @@ data Assets = Assets {
 data DadosJogo = MenuP
                    (Float, Float) -- ^ Posição do rato
                    [Botao]
+               | MenuPE
+                   (Float, Float)
+                   [Botao]
+                   String
                | Play
 
 {-|
