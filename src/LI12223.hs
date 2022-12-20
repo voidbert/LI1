@@ -114,6 +114,10 @@ data DadosJogo = MenuP
                    Float                          -- ^ Posição vertical
                    [(FilePath, Picture, [Botao])] -- ^ Lista de mapas
                    [Botao]                        -- ^ Botões de baixo
+               | MenuPE
+                   (Float, Float)
+                   [Botao]
+                   String
                | Play
 
 {-|
