@@ -28,21 +28,19 @@ import Graphics.Gloss.Interface.IO.Game
 import LI12223
 import UI_2022li1g012
 
---função a retirar ao dar merge, só para conseguir usar o imagemBotao neste cenário 
-imagemBotao :: (Float, Float) -> Botao -> Picture
-imagemBotao p (r, (p1, p2)) = if dentro r p then p2 else p1
-
--- N importa no caso
+-- A passagem do tempo não importa para este menu
 tempoPE :: Float 
         -> EstadoJogo 
         -> IO EstadoJogo
 tempoPE _ = return
 
-{- Nesta função eu usei 3 casos, para o keystroke de teclas normais, especiais e para 
-quando não acontece nada. Quando uma tecla não especial é ativada, o estado muda para
-representar o caracter apropriado na tela. Se o backspace é ativado, é excluido o ultimo
-caracter da lista criada até então. 
+{- |
+  Esta função muda o estado quando uma tecla é pressionada. Ao pressionar
+  qualquer tecla com caracteres, o estado muda para representar o caracter 
+  apropriado na tela, construindo uma lista. Se o backspace for pressionado,
+  é excluido o ultimo caracter da lista criada até então. 
 -}
+
 eventoTeclado :: Event 
               -> EstadoJogo 
               -> IO (EstadoJogo)
@@ -53,10 +51,12 @@ eventoTeclado (EventKey k@(Char c) Down _ _) (EJ (MenuPE m bts s) fj a)
   | otherwise             = return $ EJ (MenuPE m bts $ s ++ [c]) fj a
 eventoTeclado _ e = return e 
 
-{- Esta função renderiza o menu com 3 pictures, uma a lista s que é modificada com
-a função eventoTeclado, texto no topo para indicar uma ação ao jogador e um conjunto
-de pictures de dois botões.
+{- |
+  Esta função renderiza o menu com as seguintes Pictures: a lista @s@ que é 
+  modificada com a função 'eventoTeclado'; o texto no topo para indicar uma ação
+  ao jogador e um conjunto de pictures de dois botões.
 -}
+
 renderizarPE :: EstadoJogo 
              -> IO Picture
 renderizarPE (EJ (MenuPE p bts s) fj a) = return $ Pictures [
@@ -64,9 +64,12 @@ renderizarPE (EJ (MenuPE p bts s) fj a) = return $ Pictures [
   Translate 0 250 $ Scale 5 5 $ snd $ mrTexto (fonte a) TCentro "Nome\ndo\nMapa",
   Pictures $ map (imagemBotao p) bts]
 
-{-O estado inicial do Menu, apresenta as translações dos botões a ser renderizados
-pela função renderizarPE e todos os parametros iniciais do estado de jogo.
+{- |
+  O estado inicial do Menu, apresenta as translações dos botões a ser 
+  renderizados pela função 'renderizarPE' e todos os parametros iniciais
+  do estado de jogo.
 -}
+
 inicializarMPE :: Assets 
                 -> IO EstadoJogo
 inicializarMPE a = return $ EJ (MenuPE (0,0) bts "") funcoesJogoPE a
