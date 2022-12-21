@@ -101,7 +101,11 @@ data Assets = Assets {
 data DadosJogo = MenuP
                    (Float, Float) -- ^ Posição do rato
                    [Botao]
+               | GameOver
+                   (Float, Float)
+                   [Botao]
                | Play
+
 
 {-|
   Funções associadas a um 'EstadoJogo', responsáveis pela sua atualização após
