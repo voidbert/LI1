@@ -28,7 +28,6 @@ import Graphics.Gloss.Interface.IO.Game
 import LI12223
 import UI_2022li1g012
 
-
 --função a retirar ao dar merge, só para conseguir usar o imagemBotao neste cenário 
 imagemBotao :: (Float, Float) -> Botao -> Picture
 imagemBotao p (r, (p1, p2)) = if dentro r p then p2 else p1
@@ -44,26 +43,29 @@ tempoGO _ = return
 eventoGO :: Event 
          -> EstadoJogo 
          -> IO (EstadoJogo)
-eventoGO (EventMotion (x, y)) (EJ (GameOver _ bts) fj a) 
-  = return $                   EJ (GameOver (x, y) bts) fj a
+eventoGO (EventMotion (x, y)) (EJ (GameOver _ bts _) fj a) 
+  = return $                   EJ (GameOver (x, y) bts (balde a)) fj a
+eventoGO (EventKey _ _ _ _) e = return e
 eventoGo _ e = return e 
 
 {- 
 -}
 renderizarGO :: EstadoJogo 
              -> IO Picture
-renderizarGO (EJ (GameOver p bts) fj a) = return $ Pictures [
+renderizarGO (EJ (GameOver p bts _) fj a) = return $ Pictures [
   Translate 0 250 $ Scale 5 5 $ snd $ mrTexto (fonte a) TCentro "Game\nOver",
+  balde a,
   Pictures $ map (imagemBotao p) bts]
 
 {-
 -}
 inicializarGO :: Assets 
-                -> IO EstadoJogo
-inicializarGO a = return $ EJ (GameOver (0,0) bts) funcoesJogoPE a
-  where b1@((_, (w1, h1)), _) = scaleBt 2 $ mrBotao (fonte a) "Jogar de novo"
+              -> IO EstadoJogo
+inicializarGO a = return $ EJ (GameOver (0,0) bts i) funcoesJogoGO a
+  where i = balde a 
+        b1@((_, (w1, h1)), _) = scaleBt 2 $ mrBotao (fonte a) "Jogar de novo"
         b2@((_, (w2, h2)), _) = scaleBt 2 $ mrBotao (fonte a) "Voltar ao menu"
         b1' = translateBt (384 - w1 / 2 - 16)  (-384 + h1 / 2 + 16) b1
         b2' = translateBt (-384 + w2 / 2 + 16) (-384 + h2 / 2 + 16) b2
         bts = [b1', b2']
-        funcoesJogoPE = FJ tempoGO eventoGO renderizarGO 
+        funcoesJogoGO = FJ tempoGO eventoGO renderizarGO
