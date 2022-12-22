@@ -91,7 +91,8 @@ data Jogada
   Lista de imagens / sons / outros necessários ao longo do jogo.
 -}
 data Assets = Assets {
-  fonte :: BitmapData
+  fonte :: BitmapData,
+  balde :: Picture
   }
 
 {-|
@@ -104,6 +105,7 @@ data DadosJogo = MenuP
                | GameOver
                    (Float, Float)
                    [Botao]
+                   Picture
                | Play
 
 
@@ -114,7 +116,7 @@ data DadosJogo = MenuP
 data FuncoesJogo = FJ (Float -> EstadoJogo -> IO EstadoJogo) -- ^ Passagem de tempo
                       (Event -> EstadoJogo -> IO EstadoJogo) -- ^ Reação a eventos
                       (EstadoJogo -> IO Picture) -- ^ Renderizar o jogo
-
+        
 {-|
   Um 'EstadoJogo' representa um menu ou o o jogo em si. É constituído por dados
   que são transmitidos de atualização para atualização ('DadosJogo') e funções
