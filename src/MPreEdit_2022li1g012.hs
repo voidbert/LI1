@@ -22,11 +22,16 @@ Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
 -}
 module MPreEdit_2022li1g012 where
 
+import System.IO.Error
+import System.FilePath
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 
 import LI12223
 import UI_2022li1g012
+import ErroM_2022li1g012
+import FicheiroMapa_2022li1g012
+import Editor_2022li1g012
 import {-# SOURCE #-} MenuF_2022li1g012 -- módulos mutuamente recursivos
 
 -- A passagem do tempo não importa para este menu
@@ -58,7 +63,14 @@ eventoTeclado :: Event
 eventoTeclado (EventMotion (x, y)) (EJ (MenuPE _ bts s) fj a) 
   = return $ EJ (MenuPE (x, y) bts s) fj a
 eventoTeclado (EventKey (MouseButton LeftButton) Up _ (x, y))
-  (EJ (MenuPE _ bts _) _ b)
+  (EJ (MenuPE _ bts s) _ b)
+  -- Criar mapa
+  | dentro (fst (bts !! 0)) (x, y) = tryIOError diretoriaMapas >>=
+       \ z -> case z of (Left _)  ->
+                          inicializarErroM b "Falha ao criar\n\no mapa :("
+                        (Right d) ->
+                          inicializarEditor b False (d </> (s ++ ".map"))
+  -- Voltar
   | dentro (fst (bts !! 1)) (x, y) = inicializarMenuF b 0
 
 eventoTeclado (EventKey (Char c) Down _ _) ej@(EJ (MenuPE m bts s) fj a) 

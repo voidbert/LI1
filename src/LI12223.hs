@@ -115,6 +115,11 @@ data DadosJogo = MenuP
                    (Float, Float)
                    [Botao]
                    String
+               | Editor
+                   (Float, Float) -- ^ Posição do rato
+                   FilePath       -- ^ Onde guardar o mapa
+                   Mapa           -- ^ Conteúdos do mapa
+                   [Botao]        -- ^ Botões de baixo
                | Play
 
 {-|
