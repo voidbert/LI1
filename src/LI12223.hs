@@ -101,6 +101,19 @@ data Assets = Assets {
 data DadosJogo = MenuP
                    (Float, Float) -- ^ Posição do rato
                    [Botao]
+               | ErroM
+                   (Float, Float) -- ^ Posição do rato
+                   Picture        -- ^ Mensagem de erro (renderizada)
+                   Botao          -- ^ Botão de regresso ao menu
+               | MenuF
+                   (Float, Float)                 -- ^ Posição do rato
+                   Float                          -- ^ Posição vertical
+                   [(FilePath, Picture, [Botao])] -- ^ Lista de mapas
+                   [Botao]                        -- ^ Botões de baixo
+               | MenuPE
+                   (Float, Float)
+                   [Botao]
+                   String
                | Play
 
 {-|

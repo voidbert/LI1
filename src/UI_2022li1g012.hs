@@ -28,8 +28,8 @@ module UI_2022li1g012 (
   -- *** Geral
   Retangulo, dentro,
   -- *** Botões
-  Botao, ImagensBotao, rBotao, rBotaoT, mrBotao, gerarBotoesEsp,
-  translateBt, scaleBt,
+  Botao, ImagensBotao, rBotao, rBotaoT, mrBotao, gerarBotoesEspV,
+  gerarBotoesEspH, translateBt, scaleBt, imagemBotao,
 
   -- * Funções auxiliares
   -- ** Renderização de texto
@@ -268,6 +268,12 @@ scaleBt :: Float -- ^ Escala horizontal e vertical
 scaleBt s ((p, (w, h)), (p1, p2)) = ((p, (w * s, h * s)),
   (Scale s s p1, Scale s s p2))
 
+{-|
+  'imagemBotao' devolve a imagem de um botão que deve ser utilizada para a sua
+  renderização, dada a posição do rato (botão com ou sem highlight).
+-}
+imagemBotao :: (Float, Float) -> Botao -> Picture
+imagemBotao p (r, (p1, p2)) = if dentro r p then p2 else p1
 
 {-|
   'gerarBotoes' gera vários botões com texto, todos com o mesmo tamanho, o
@@ -282,19 +288,39 @@ gerarBotoes b txts = map (rBotaoT b (w - 16, h - 16)) txts
         h = maximum $ map snd tamanhos
 
 {-|
-  'gerarBotoesEsp' gera vários botões com texto, tal como 'gerarBotoes'. No
+  'gerarBotoesEspV' gera vários botões com texto, tal como 'gerarBotoes'. No
   entanto, um espaçamento vertical entre os botões é adicionado (por exemplo,
-  para uso num menu).
+  para uso num menu). Ver alternativa horizontal: 'gerarBotoesEspH'.
 -}
-gerarBotoesEsp :: BitmapData -- ^ Imagem da fonte
-               -> Float      -- ^ Espaçamento vertical (em px) entre botões
-               -> Float      -- ^ Escala dos botões e do espaçamento
-               -> [String]   -- ^ Texto de cada botão
-               -> [Botao]    -- ^ Botões produzidos
-gerarBotoesEsp _ _ _ [] = [] -- evitar função parcial
-gerarBotoesEsp b e s txts = bts'
+gerarBotoesEspV :: BitmapData       -- ^ Imagem da fonte
+                -> Float            -- ^ Espaçamento vertical entre botões
+                -> Float            -- ^ Escala dos botões e do espaçamento
+                -> [String]         -- ^ Texto de cada botão
+                -> (Float, [Botao]) -- ^ Altura total e botões produzidos
+gerarBotoesEspV _ _ _ [] = (0, []) -- evitar função parcial
+gerarBotoesEspV b e s txts = (th, bts')
   where bts = map (scaleBt s) $ gerarBotoes b txts
-        th = (sum $ map (snd . snd . fst) bts) + e * s * fromIntegral (length bts - 1)
+        count = fromIntegral (length bts - 1)
+        th = (sum $ map (snd . snd . fst) bts) + e * s * count
         (w, h) = snd $ fst $ (bts !! 0)
-        bts' = map (\ (i, bt) -> translateBt 0 (th / 2 - (h + e * s) * i - h / 2) bt) (zip [0..] bts)
+        bts' = map (\ (i, bt) -> translateBt 0
+         (th / 2 - (h + e * s) * i - h / 2) bt) (zip [0..] bts)
 
+{-|
+  'gerarBotoesEspH' gera vários botões com texto, tal como 'gerarBotoes'. No
+  entanto, um espaçamento horizontal entre os botões é adicionado (por exemplo,
+  para uso num menu). Ver alternativa vertical: 'gerarBotoesEspV'.
+-}
+gerarBotoesEspH :: BitmapData       -- ^ Imagem da fonte
+                -> Float            -- ^ Espaçamento horizontal entre botões
+                -> Float            -- ^ Escala dos botões e do espaçamento
+                -> [String]         -- ^ Texto de cada botão
+                -> (Float, [Botao]) -- ^ Largura total e botões produzidos
+gerarBotoesEspH _ _ _ [] = (0, []) -- evitar função parcial
+gerarBotoesEspH b e s txts = (tw, bts')
+  where bts = map (scaleBt s) $ gerarBotoes b txts
+        count = fromIntegral (length bts - 1)
+        tw = (sum $ map (fst . snd . fst) bts) + e * s * count
+        (w, h) = snd $ fst $ (bts !! 0)
+        bts' = map (\ (i, bt) -> translateBt
+          (-tw / 2 + (w + e * s) * i + w / 2) 0 bt) (zip [0..] bts)
