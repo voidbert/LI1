@@ -30,6 +30,9 @@ module Editor_2022li1g012 (
   posicaoRatoMapa, ratoVelocidades, ratoTerrenos,
   -- ** Inicialização
   novoMapa,
+  -- ** Edição do mapa
+  obstaculoSeguinteMapa, obstaculoSeguinteLinha, velocidadeSeguinte,
+  terrenoSeguinte,
   -- ** Renderização
   renderizarTerrenos, retanguloRato
 ) where
@@ -85,18 +88,83 @@ ratoTerrenos (x,y) = if 0 <= x' && x' < 32 && 0 <= y' && y' < 20 then
         y' = floor ((-y + 353) / 32)
 
 {-|
+  'obstaculoSeguinteLinha' é uma função auxiliar de 'obstaculoSeguinteMapa' que
+  substitui um obstáculo numa linha de um mapa pelo que o procede.
+-}
+obstaculoSeguinteLinha :: (Terreno, [Obstaculo]) -- ^ Linha a editar
+                       -> Int                    -- ^ Posição do obstáculo
+                       -> (Terreno, [Obstaculo]) -- ^ Linha editada
+obstaculoSeguinteLinha (t, os) n = (t, a ++ seguinte t x : b)
+  where (a, (x:b)) = splitAt n os
+        seguinte Relva       Nenhum = Arvore
+        seguinte Relva       _      = Nenhum
+        seguinte (Rio _)     Nenhum = Tronco
+        seguinte (Rio _)     _      = Nenhum
+        seguinte (Estrada _) Nenhum = Carro
+        seguinte (Estrada _) _      = Nenhum
+
+{-|
+  'obstaculoSeguinteMapa' substitui um obstáculo numa posição do mapa pelo que
+  o procede quando o utilizado clica para o mudar.
+-}
+obstaculoSeguinteMapa :: Mapa       -- ^ Mapa a editar
+                      -> (Int, Int) -- ^ Posição no mapa
+                      -> Mapa       -- ^ Mapa editado
+obstaculoSeguinteMapa (Mapa lg lns) (x, y) =
+  Mapa lg (a ++ obstaculoSeguinteLinha l x : b)
+  where (a, (l:b)) = splitAt y lns
+
+{-|
+  'velocidadeSeguinte' altera a velocidade de uma linha do mapa para a
+  velocidade seguinte na ciclo -3, -2, -1, 0, 1, 2, 3, -3, -2, ...
+-}
+velocidadeSeguinte :: Mapa -- ^ Mapa inicial
+                   -> Int  -- ^ Número da linha
+                   -> Mapa -- ^ Mapa final
+velocidadeSeguinte (Mapa l lns) n =
+  Mapa l (a ++ (seguinte t, obs) : b)
+  where (a, ((t, obs):b)) = splitAt n lns
+        numero n = if n >= 3 then (-3) else n + 1
+        seguinte (Rio     v) = Rio     $ numero v
+        seguinte (Estrada v) = Estrada $ numero v
+        seguinte Relva       = Relva
+
+{-|
+  'terrenoSeguinte' altera o tipo de terreno de uma linha do mapa para o tipo
+  de terreno seguinte.
+-}
+terrenoSeguinte :: Mapa -- ^ Mapa inicial
+                -> Int  -- ^ Número da linha
+                -> Mapa -- ^ Mapa final
+terrenoSeguinte (Mapa l lns) n =
+  Mapa l (a ++ (seguinte t, replicate 20 Nenhum) : b)
+  where (a, ((t, obs):b)) = splitAt n lns
+        seguinte (Rio     _) = Estrada 0
+        seguinte (Estrada _) = Relva
+        seguinte Relva       = Rio 0
+
+{-|
   'eventoEditor' reage ao input do utilizador (movimento do rato e cliques em
   botões).
 -}
 eventoEditor :: Event -> EstadoJogo -> IO EstadoJogo
 eventoEditor (EventMotion (x, y)) (EJ (Editor _ fp m bts) f a) =
   return $ EJ (Editor (x, y) fp m bts) f a
-eventoEditor (EventKey (MouseButton LeftButton) Up _ (x, y))
-            ej@(EJ (Editor _ fp m bts) _ a)
+eventoEditor (EventKey (MouseButton LeftButton) Up _ p@(x, y))
+            ej@(EJ (Editor _ fp m bts) f a)
   | dentro (fst (bts !! 0)) (x, y) = guardarFicheiroMapa 0 m fp >>=
       \ r -> if r then inicializarMenuF a 0 else
                inicializarErroM a "Erro ao guardar\n\no mapa :("
   | dentro (fst (bts !! 1)) (x, y) = inicializarMenuF a 0
+  | isJust pm = return $
+      EJ (Editor p fp (obstaculoSeguinteMapa m (fromJust pm)) bts) f a
+  | isJust pv = return $
+      EJ (Editor p fp (velocidadeSeguinte m (fromJust pv)) bts) f a
+  | isJust pt = return $
+      EJ (Editor p fp (terrenoSeguinte m (fromJust pt)) bts) f a
+  where pm = posicaoRatoMapa p
+        pv = ratoVelocidades p
+        pt = ratoTerrenos    p
 eventoEditor _ e = return e
 
 {-|
