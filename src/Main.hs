@@ -32,6 +32,7 @@ module Main (
 import Data.Maybe
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
+import System.IO.Error
 import Codec.BMP
 
 import LI12223
@@ -68,9 +69,10 @@ tempoGloss t j@(EJ _ (FJ a _ _) _) = a t j
 
 -- | 'lerBMP' lê um ficheiro do tipo bitmap.
 lerBMP :: FilePath -> IO BMP
-lerBMP fp = readBMP fp >>= filterError
+lerBMP fp = tryIOError (readBMP fp) >>= filterError
   where filterError (Left  _) = error ("Erro a ler bitmap " ++ fp)
-        filterError (Right i) = return i
+        filterError (Right (Left _)) = error ("Erro a ler bitmap " ++ fp)
+        filterError (Right (Right i)) = return i
 
 {-|
  'lerPicture' lê um ficheiro do tipo bitmap ('lerBMP') e transforma-o numa
@@ -87,7 +89,8 @@ lerAssets :: IO Assets
 lerAssets = do
   fnt <- lerBMP "assets/export/Font.bmp"
   bld <- lerPicture "assets/export/Balde.bmp"
-  return (Assets (bitmapDataOfBMP fnt) (bld))
+  tls <- lerBMP "assets/export/Tiles.bmp"
+  return (Assets (bitmapDataOfBMP fnt) (bld) (bitmapDataOfBMP tls))
 
 -- | Ponto de entrada do programa, onde se abre a janela com o jogo.
 main :: IO ()
