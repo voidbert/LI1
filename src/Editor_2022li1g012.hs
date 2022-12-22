@@ -35,6 +35,7 @@ import Graphics.Gloss.Interface.IO.Game
 
 import LI12223
 import FicheiroMapa_2022li1g012
+import RenderMapa_2022li1g012
 import UI_2022li1g012
 import ErroM_2022li1g012
 import {-# SOURCE #-} MenuF_2022li1g012
@@ -58,10 +59,33 @@ eventoEditor (EventKey (MouseButton LeftButton) Up _ (x, y))
   | dentro (fst (bts !! 1)) (x, y) = inicializarMenuF a 0
 eventoEditor _ e = return e
 
+{-|
+  'renderizarTerrenos' devolve a imagem para mostrar o tipo de terreno e a
+  sua velocidade de cada linha do mapa. __A imagem não está centrada!__ Na
+  origem está o centro da tile do terreno superior da imagem resultante.
+-}
+renderizarTerrenos :: Assets  -- ^ Recursos do jogo
+                   -> Mapa    -- ^ Mapa cujos terrenos serão desenhados
+                   -> Picture -- ^ Imagem resultante
+renderizarTerrenos b (Mapa _ lns) =
+  Pictures $ map (\ (n, l) -> Translate 0 (-n * 32) $ aux l) $ zip [0..] lns
+  where show' n = if n >= 0 then ' ' : show n else show n -- Alinhamento números
+        aux (Relva, _) = renderizarObstaculo (tiles b) Relva Relva 0 Nenhum
+        aux (Rio n, _) = let ((w, _), t) = mrTexto (fonte b) TCentro (show' n)
+          in Pictures [
+          renderizarObstaculo (tiles b) (Rio 0) (Rio 0) 0 Nenhum,
+          Translate (24 + w) 0 $ Scale 2 2 $ t]
+        aux (Estrada n, _) = let ((w, _), t) = mrTexto (fonte b) TCentro (show' n)
+          in Pictures [
+          renderizarObstaculo (tiles b) (Estrada 0) (Estrada 0) 0 Nenhum,
+          Translate (24 + w) 0 $ Scale 2 2 $ t]
+
 -- | 'renderizarEditor' é responsável por desenhar o editor no ecrã.
 renderizarEditor :: EstadoJogo -> IO Picture
-renderizarEditor (EJ (Editor p _ m bts) _ b) =
-  return $ Pictures $ map (imagemBotao p) bts
+renderizarEditor (EJ (Editor p _ m bts) _ b) = return $ Pictures [
+  Pictures $ map (imagemBotao p) bts,
+  Translate (-384 + 32) (10 * 32 + 16) $ renderizarTerrenos b m,
+  Translate (-10 * 32 + 48) (-10 * 32 + 32) $ renderizarMapa (tiles b) 0 m ]
 
 -- | 'novoMapa' é o mapa vazio que deve ser usado quando um mapa é criado
 novoMapa = Mapa 20 $ replicate 20 (Relva, replicate 20 Nenhum)
