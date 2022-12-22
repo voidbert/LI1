@@ -92,8 +92,8 @@ data Jogada
 -}
 data Assets = Assets {
   fonte :: BitmapData,
+  tiles :: BitmapData
   balde :: Picture
-  assets :: BitmapData
   }
 
 {-|
@@ -116,6 +116,11 @@ data DadosJogo = MenuP
                    (Float, Float)
                    [Botao]
                    String
+               | Editor
+                   (Float, Float) -- ^ Posição do rato
+                   FilePath       -- ^ Onde guardar o mapa
+                   Mapa           -- ^ Conteúdos do mapa
+                   [Botao]        -- ^ Botões de baixo
                | GameOver
                    (Float, Float)
                    [Botao]

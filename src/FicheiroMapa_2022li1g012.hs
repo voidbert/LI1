@@ -24,7 +24,7 @@ module FicheiroMapa_2022li1g012 (
   -- * Listagem e gestão de mapas
   listarMapas, diretoriaMapas, nomeMapa, apagarMapa,
   -- * Exportação e importação de mapas
-  mapaStr, parseMapa,
+  mapaStr, parseMapa, lerFicheiroMapa, guardarFicheiroMapa,
   -- * Funções auxiliares
   -- ** Exportação de mapas
   terrenoStr, obstaculoC, linhaStr,
@@ -142,6 +142,14 @@ mapaStr :: Int    -- ^ Recorde do jogador
         -> String -- ^ Mapa convertido
 mapaStr r (Mapa _ lns) = unlines (show r : map linhaStr lns)
 
+guardarFicheiroMapa :: Int      -- ^ Recorde do jogador
+                    -> Mapa     -- ^ Mapa a guardar
+                    -> FilePath -- ^ Onde guardar o mapa
+                    -> IO Bool  -- ^ Se a operação teve (ou não) sucesso
+guardarFicheiroMapa r m fp = do
+  e <- tryIOError (writeFile fp $ mapaStr r m)
+  case e of (Left _)  -> return False
+            (Right _) -> return True
 
 {-|
   'parseTerreno' devolve um tipo de terreno após analisar a 'String' em que
@@ -271,3 +279,14 @@ parseMapa s
                 in if isNothing rec || isNothing m then Nothing
                      else Just (fromJust rec, fromJust m)
   where lns = lines s
+
+{-|
+  'lerFicheiroMapa' lê os conteúdos de um ficheiro e analisa-os, procurando
+  extrair um recorde e um mapa (ver 'parseMapa').
+-}
+lerFicheiroMapa :: FilePath          -- ^ Localização do ficheiro
+                -> IO (Maybe (Int, Mapa)) -- ^ Recorde e mapa
+lerFicheiroMapa fp = do
+  c <- tryIOError (readFile fp)
+  case c of (Left _)   -> return Nothing
+            (Right c') -> return $ parseMapa c'
