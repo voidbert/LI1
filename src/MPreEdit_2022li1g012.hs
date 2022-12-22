@@ -27,6 +27,7 @@ import Graphics.Gloss.Interface.IO.Game
 
 import LI12223
 import UI_2022li1g012
+import {-# SOURCE #-} MenuF_2022li1g012 -- módulos mutuamente recursivos
 
 -- A passagem do tempo não importa para este menu
 tempoPE :: Float 
@@ -56,10 +57,14 @@ eventoTeclado :: Event
               -> IO (EstadoJogo)
 eventoTeclado (EventMotion (x, y)) (EJ (MenuPE _ bts s) fj a) 
   = return $ EJ (MenuPE (x, y) bts s) fj a
+eventoTeclado (EventKey (MouseButton LeftButton) Up _ (x, y))
+  (EJ (MenuPE _ bts _) _ b)
+  | dentro (fst (bts !! 1)) (x, y) = inicializarMenuF b 0
+
 eventoTeclado (EventKey (Char c) Down _ _) ej@(EJ (MenuPE m bts s) fj a) 
   | c == '\b' = let s' = if null s then s else init s in
       return $ EJ (MenuPE m bts s') fj a
-  | otherwise             = return $ adicionarTexto ej c
+  | otherwise = return $ adicionarTexto ej c
 eventoTeclado (EventKey (SpecialKey KeySpace) Down _ _) ej =
   return $ adicionarTexto ej ' '
 eventoTeclado _ e = return e 

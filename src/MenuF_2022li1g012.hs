@@ -45,6 +45,7 @@ import LI12223
 import UI_2022li1g012
 import FicheiroMapa_2022li1g012
 import ErroM_2022li1g012
+import MPreEdit_2022li1g012
 import {-# SOURCE #-} MenuP_2022li1g012 -- módulos mutuamente recursivos
 
 -- | 'tempoMenuF' reage à passagem do tempo (nenhuma)
@@ -141,6 +142,7 @@ eventoMenuF (EventMotion (x, y)) (EJ (MenuF _ v l bts) f b) =
   return $ EJ (MenuF (x, y) v l bts) f b
 eventoMenuF (EventKey (MouseButton LeftButton) Up _ (x, y))
             ej@(EJ (MenuF _ v l bts) _ b)
+  | dentro (fst (bts !! 0)) (x, y) = inicializarMPE b
   | dentro (fst (bts !! 1)) (x, y) = inicializarMenu b
   | not $ dentroRegiaoLinhas ej = return ej
   | otherwise = cliqueLinhas ej >>= (return . snd)

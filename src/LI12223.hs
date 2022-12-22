@@ -101,10 +101,6 @@ data Assets = Assets {
 data DadosJogo = MenuP
                    (Float, Float) -- ^ Posição do rato
                    [Botao]
-               | MenuPE
-                   (Float, Float)
-                   [Botao]
-                   String
                | ErroM
                    (Float, Float) -- ^ Posição do rato
                    Picture        -- ^ Mensagem de erro (renderizada)
