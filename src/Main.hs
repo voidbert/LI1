@@ -36,7 +36,7 @@ import Codec.BMP
 
 import LI12223
 import MenuP_2022li1g012
-
+import GameOver_2022li1g012
 {-|
   'renderizarGloss', dado um estado de jogo, devolve os conteúdos que devem ser
   desenhados no ecrã.
@@ -86,12 +86,13 @@ lerPicture x = lerBMP x >>= (return . bitmapOfBMP)
 lerAssets :: IO Assets
 lerAssets = do
   fnt <- lerBMP "assets/export/Font.bmp"
-  return (Assets (bitmapDataOfBMP fnt))
+  bld <- lerPicture "assets/export/Balde.bmp"
+  return (Assets (bitmapDataOfBMP fnt) (bld))
 
 -- | Ponto de entrada do programa, onde se abre a janela com o jogo.
 main :: IO ()
 main = do
   let janela = InWindow "Crossy Road" (768, 768) (0, 0)
   assets <- lerAssets
-  inicial <- inicializarMenu assets
+  inicial <- inicializarGO assets
   playIO janela black 60 inicial renderizarGloss eventosGloss tempoGloss
