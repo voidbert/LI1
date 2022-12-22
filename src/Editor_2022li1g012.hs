@@ -26,10 +26,15 @@ module Editor_2022li1g012 (
   -- * Funções internas
   -- ** Gloss
   tempoEditor, eventoEditor, renderizarEditor,
+  -- ** Comuns
+  posicaoRatoMapa, ratoVelocidades, ratoTerrenos,
   -- ** Inicialização
-  novoMapa
+  novoMapa,
+  -- ** Renderização
+  renderizarTerrenos, retanguloRato
 ) where
 
+import Data.Maybe
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 
@@ -43,6 +48,41 @@ import {-# SOURCE #-} MenuF_2022li1g012
 -- | 'tempoEditor' reage à passagem do tempo (nenhuma)
 tempoEditor :: Float -> EstadoJogo -> IO EstadoJogo
 tempoEditor _ = return
+
+{-|
+  'posicaoRatoMapa' transforma a posição do rato numa posição do mapa, caso o
+  cursor se encontre na área visível do mapa representado.
+-}
+posicaoRatoMapa :: (Float, Float)   -- ^ Posição do rato
+                -> Maybe (Int, Int) -- ^ Coordenadas no mapa
+posicaoRatoMapa (x, y) = if 0 <= x' && x' < 20 && 0 <= y' && y' < 20 then
+  Just (x', y') else Nothing
+  where x' = floor ((x + 272) / 32)
+        y' = floor ((-y + 353) / 32)
+
+{-|
+  'ratoVelocidades' transforma a posição do rato no índice de uma linha do
+  mapa, caso o cursor se encontre sobre o texto de mudança de velocidade do
+  terreno.
+-}
+ratoVelocidades :: (Float, Float) -- ^ Posição do rato
+                -> Maybe Int      -- ^ Linha do mapa a ser mudada a velocidade
+ratoVelocidades (x,y) = if 0 <= x' && x' < 64 && 0 <= y' && y' < 20 then
+  Just y' else Nothing
+  where x' = floor (x + (384 - (16 + 32)))
+        y' = floor ((-y + 353) / 32)
+
+{-|
+  'ratoTerrenos' transforma a posição do rato no índice de uma linha do
+  mapa, caso o cursor se encontre sobre a tile correspondente ao tipo de
+  terreno.
+-}
+ratoTerrenos :: (Float, Float) -- ^ Posição do rato
+             -> Maybe Int      -- ^ Linha do mapa a ser mudada a velocidade
+ratoTerrenos (x,y) = if 0 <= x' && x' < 32 && 0 <= y' && y' < 20 then
+  Just y' else Nothing
+  where x' = floor (x + (384 - 16))
+        y' = floor ((-y + 353) / 32)
 
 {-|
   'eventoEditor' reage ao input do utilizador (movimento do rato e cliques em
@@ -80,12 +120,36 @@ renderizarTerrenos b (Mapa _ lns) =
           renderizarObstaculo (tiles b) (Estrada 0) (Estrada 0) 0 Nenhum,
           Translate (24 + w) 0 $ Scale 2 2 $ t]
 
+{-|
+  'retanguloRato' devolve um retângulo para ser desenhado, que faz sobressair
+  em que é que o jogador está a clicar (mudar um obstáculo, uma velocidade ou
+  um terreno).
+-}
+retanguloRato :: Mapa           -- ^ Mapa a ser editado
+              -> (Float, Float) -- ^ Posição do rato
+              -> Picture        -- ^ Imagem do retângulo
+retanguloRato (Mapa _ lns) p
+  | isJust pm = let (x, y) = fromJust pm in color red $
+      Translate (fromIntegral x * 32 - 256) (- (fromIntegral y * 32 - 337)) $
+      rectangleWire 32 32
+  | isJust pv = let y = fromJust pv in if fst (lns !! y) == Relva then Blank
+      else color red $ Translate (-384 + (16 + 32 + 32))
+      (- (fromIntegral y * 32 - 337)) $ rectangleWire 64 32
+  | isJust pt = let y = fromJust pt in color red $
+      Translate (-384 + (16 + 16)) (- (fromIntegral y * 32 - 337)) $
+      rectangleWire 32 32
+  | otherwise = Blank
+  where pm = posicaoRatoMapa p
+        pv = ratoVelocidades p
+        pt = ratoTerrenos    p
+
 -- | 'renderizarEditor' é responsável por desenhar o editor no ecrã.
 renderizarEditor :: EstadoJogo -> IO Picture
 renderizarEditor (EJ (Editor p _ m bts) _ b) = return $ Pictures [
   Pictures $ map (imagemBotao p) bts,
   Translate (-384 + 32) (10 * 32 + 16) $ renderizarTerrenos b m,
-  Translate (-10 * 32 + 48) (-10 * 32 + 32) $ renderizarMapa (tiles b) 0 m ]
+  Translate (-10 * 32 + 48) (-10 * 32 + 32) $ renderizarMapa (tiles b) 0 m,
+  retanguloRato m p]
 
 -- | 'novoMapa' é o mapa vazio que deve ser usado quando um mapa é criado
 novoMapa = Mapa 20 $ replicate 20 (Relva, replicate 20 Nenhum)
