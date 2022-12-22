@@ -93,6 +93,7 @@ data Jogada
 data Assets = Assets {
   fonte :: BitmapData,
   tiles :: BitmapData
+  balde :: Picture
   }
 
 {-|
@@ -120,7 +121,12 @@ data DadosJogo = MenuP
                    FilePath       -- ^ Onde guardar o mapa
                    Mapa           -- ^ Conteúdos do mapa
                    [Botao]        -- ^ Botões de baixo
+               | GameOver
+                   (Float, Float)
+                   [Botao]
+                   Picture
                | Play
+
 
 {-|
   Funções associadas a um 'EstadoJogo', responsáveis pela sua atualização após
@@ -129,7 +135,7 @@ data DadosJogo = MenuP
 data FuncoesJogo = FJ (Float -> EstadoJogo -> IO EstadoJogo) -- ^ Passagem de tempo
                       (Event -> EstadoJogo -> IO EstadoJogo) -- ^ Reação a eventos
                       (EstadoJogo -> IO Picture) -- ^ Renderizar o jogo
-
+        
 {-|
   Um 'EstadoJogo' representa um menu ou o o jogo em si. É constituído por dados
   que são transmitidos de atualização para atualização ('DadosJogo') e funções
