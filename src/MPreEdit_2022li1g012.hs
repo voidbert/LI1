@@ -35,20 +35,33 @@ tempoPE :: Float
 tempoPE _ = return
 
 {- |
+  'adicionarTexto' adiciona um caracter à caixa de texto, se esta não estiver
+  ainda cheia.
+-}
+adicionarTexto :: EstadoJogo
+               -> Char
+               -> EstadoJogo
+adicionarTexto ej@(EJ (MenuPE p bts s) fj a) c
+  | length s < 20 = EJ (MenuPE p bts (s ++ [c])) fj a
+  | otherwise = ej
+
+{- |
   Esta função muda o estado quando uma tecla é pressionada. Ao pressionar
   qualquer tecla com caracteres, o estado muda para representar o caracter 
   apropriado na tela, construindo uma lista. Se o backspace for pressionado,
   é excluido o ultimo caracter da lista criada até então. 
 -}
-
 eventoTeclado :: Event 
               -> EstadoJogo 
               -> IO (EstadoJogo)
-eventoTeclado (EventMotion (x, y))           (EJ (MenuPE _ bts s) fj a) 
+eventoTeclado (EventMotion (x, y)) (EJ (MenuPE _ bts s) fj a) 
   = return $ EJ (MenuPE (x, y) bts s) fj a
-eventoTeclado (EventKey k@(Char c) Down _ _) (EJ (MenuPE m bts s) fj a) 
-  | c == '\b' = return $ EJ (MenuPE m bts $ init s)   fj a
-  | otherwise             = return $ EJ (MenuPE m bts $ s ++ [c]) fj a
+eventoTeclado (EventKey (Char c) Down _ _) ej@(EJ (MenuPE m bts s) fj a) 
+  | c == '\b' = let s' = if null s then s else init s in
+      return $ EJ (MenuPE m bts s') fj a
+  | otherwise             = return $ adicionarTexto ej c
+eventoTeclado (EventKey (SpecialKey KeySpace) Down _ _) ej =
+  return $ adicionarTexto ej ' '
 eventoTeclado _ e = return e 
 
 {- |
@@ -56,20 +69,20 @@ eventoTeclado _ e = return e
   modificada com a função 'eventoTeclado'; o texto no topo para indicar uma ação
   ao jogador e um conjunto de pictures de dois botões.
 -}
-
 renderizarPE :: EstadoJogo 
              -> IO Picture
 renderizarPE (EJ (MenuPE p bts s) fj a) = return $ Pictures [
-  Translate 0 (-100) $ Scale 3 3 $ snd $ mrTexto (fonte a) TCentro s,
-  Translate 0 250 $ Scale 5 5 $ snd $ mrTexto (fonte a) TCentro "Nome\ndo\nMapa",
+  Color white $ rectangleWire 500 64,
+  Scale 3 3 $ snd $ mrTexto (fonte a) TCentro s,
+  Translate 0 (384 - h * 2.5 - 16) $ Scale 5 5 $ ndm,
   Pictures $ map (imagemBotao p) bts]
+  where ((_, h), ndm) = mrTexto (fonte a) TCentro "Nome do Mapa"
 
 {- |
   O estado inicial do Menu, apresenta as translações dos botões a ser 
   renderizados pela função 'renderizarPE' e todos os parametros iniciais
   do estado de jogo.
 -}
-
 inicializarMPE :: Assets 
                 -> IO EstadoJogo
 inicializarMPE a = return $ EJ (MenuPE (0,0) bts "") funcoesJogoPE a
