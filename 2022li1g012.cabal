@@ -43,6 +43,7 @@ executable 2022li1g012
     ErroM_2022li1g012
     MenuF_2022li1g012
     MPreEdit_2022li1g012
+    RenderMapa_2022li1g012
   build-depends:    base >=4.13.3.0 && < 5, gloss >=1.13.0.1, bmp >=1.2, directory, filepath
   ghc-options: -O2 -threaded
   hs-source-dirs:   src

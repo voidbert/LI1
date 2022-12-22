@@ -91,7 +91,8 @@ data Jogada
   Lista de imagens / sons / outros necessários ao longo do jogo.
 -}
 data Assets = Assets {
-  fonte :: BitmapData
+  fonte :: BitmapData,
+  assets :: BitmapData
   }
 
 {-|
