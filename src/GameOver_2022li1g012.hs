@@ -27,10 +27,7 @@ import Graphics.Gloss.Interface.IO.Game
 
 import LI12223
 import UI_2022li1g012
-
---função a retirar ao dar merge, só para conseguir usar o imagemBotao neste cenário 
-imagemBotao :: (Float, Float) -> Botao -> Picture
-imagemBotao p (r, (p1, p2)) = if dentro r p then p2 else p1
+import {-# SOURCE #-} MenuP_2022li1g012
 
 -- N importa no caso
 tempoGO :: Float 
@@ -45,8 +42,10 @@ eventoGO :: Event
          -> IO (EstadoJogo)
 eventoGO (EventMotion (x, y)) (EJ (GameOver _ bts _) fj a) 
   = return $                   EJ (GameOver (x, y) bts (balde a)) fj a
-eventoGO (EventKey _ _ _ _) e = return e
-eventoGo _ e = return e 
+eventoGO (EventKey (MouseButton LeftButton) Up _ p)
+  (EJ (GameOver _ bts _) _ a)
+  | dentro (fst (bts !! 1)) p = inicializarMenu a
+eventoGO _ e = return e
 
 {- 
 -}

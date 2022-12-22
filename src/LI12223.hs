@@ -92,7 +92,7 @@ data Jogada
 -}
 data Assets = Assets {
   fonte :: BitmapData,
-  tiles :: BitmapData
+  tiles :: BitmapData,
   balde :: Picture
   }
 
