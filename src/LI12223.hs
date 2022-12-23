@@ -121,6 +121,13 @@ data DadosJogo = MenuP
                    FilePath       -- ^ Onde guardar o mapa
                    Mapa           -- ^ Conteúdos do mapa
                    [Botao]        -- ^ Botões de baixo
+               | Frogger
+                   Float      -- ^ Tempo decorrido
+                   FilePath   -- ^ Caminho de ficheiro do mapa
+                   Jogo       -- ^ Mapa e jogador
+                   Direcao    -- ^ Orientação do jogador
+                   Bool       -- ^ Se a pontuação aumenta em cima ou baixo
+                   (Int, Int) -- ^ Pontuação e recorde
                | GameOver
                    (Float, Float)
                    [Botao]
