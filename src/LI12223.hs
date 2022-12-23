@@ -121,10 +121,18 @@ data DadosJogo = MenuP
                    FilePath       -- ^ Onde guardar o mapa
                    Mapa           -- ^ Conteúdos do mapa
                    [Botao]        -- ^ Botões de baixo
+               | Frogger
+                   Float      -- ^ Tempo decorrido
+                   [Float]    -- ^ Tempo desde a útlima atualização das linhas do mapa
+                   FilePath   -- ^ Caminho de ficheiro do mapa
+                   Jogo       -- ^ Mapa e jogador
+                   Direcao    -- ^ Orientação do jogador
+                   Bool       -- ^ Se a pontuação aumenta em cima ou baixo
+                   (Int, Int) -- ^ Pontuação e recorde
                | GameOver
-                   (Float, Float)
-                   [Botao]
-                   Picture
+                   (Float, Float) -- ^ Posição do rato
+                   [Botao]        -- ^ Botões de baixo
+                   FilePath       -- ^ Vazio para modo infinito, ou mapa frogger
                | Play
 
 
