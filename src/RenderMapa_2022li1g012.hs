@@ -97,7 +97,10 @@ renderizarObstaculo b t t' v o = Scale 2 2 $
 separarEstrada :: (Terreno, [Obstaculo]) -- ^ Linha de estrada
                -> [(Int, Obstaculo)]     -- ^ Variantes de animação e obstáculos
 separarEstrada (Estrada v, l) = grp''
-  where grp = group l
+  where lgt = length l
+        -- replicate 3 usado para carros nas bordas não usarem imagens dos mais
+        -- pequenos
+        grp = group $ concat $ replicate 3 l
         -- Limitar carros a 3 de comprimento
         limit l = if length l <= 3 then [l] else let (a, b) = splitAt 3 l in
           a : limit b
@@ -108,7 +111,8 @@ separarEstrada (Estrada v, l) = grp''
         signum' n = let s = signum n in if s == 0 then 1 else s
         variante _ (_, Nenhum) = (0, Nenhum)
         variante n (i, Carro)  = (signum' v * (sum [1..(n - 1)] + i + 1), Carro)
-        grp'' = concat $ map (\ l -> map (variante (length l)) l) grp'
+        grp'' = take lgt $ drop lgt $ concat $ -- tirar lista triplicada
+                  map (\ l -> map (variante (length l)) l) grp'
 
 separarEstrada _ = [] -- evitar função parcial. não deve acontecer
 
