@@ -2,16 +2,17 @@ module Audio_2022li1g012 where
 
 import System.Process
 
-pid = spawnCommand "pidof mpv"
+pid = spawnProcess "pidof" ["mpv"]
 
 audioMenu :: IO (ProcessHandle)
-audioMenu = spawnCommand "mpv --no-input-terminal --loop --playlist-start=0 src/GameAudioPlaylist"
+audioMenu = spawnProcess "mpv" ["--no-input-terminal", "--loop", "--playlist-start=0", "GameAudioPlaylist"]
 
 audioJogo :: IO (ProcessHandle)
-audioJogo = spawnCommand "mpv --no-input-terminal --loop --playlist-start=1 src/GameAudioPlaylist"
+audioJogo = spawnProcess "mpv" ["--no-input-terminal", "--loop", "--playlist-start=1", "GameAudioPlaylist"]  
 
 audioGO :: IO (ProcessHandle)
-audioGO = spawnCommand "mpv --no-input-terminal --loop --playlist-start=2 src/GameAudioPlaylist"
+audioGO = spawnProcess "mpv" ["--no-input-terminal", "--loop", "--playlist-start=2", "GameAudioPlaylist"]
+
 
 mataprocesso :: IO (ProcessHandle)
 mataprocesso = spawnCommand "killall mpv" 
