@@ -123,6 +123,7 @@ data DadosJogo = MenuP
                    [Botao]        -- ^ Botões de baixo
                | Frogger
                    Float      -- ^ Tempo decorrido
+                   [Float]    -- ^ Tempo desde a útlima atualização das linhas do mapa
                    FilePath   -- ^ Caminho de ficheiro do mapa
                    Jogo       -- ^ Mapa e jogador
                    Direcao    -- ^ Orientação do jogador

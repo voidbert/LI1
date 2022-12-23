@@ -26,7 +26,7 @@ module Frogger_2022li1g012 (
   -- * Funções internas
   tempoFrogger, eventoFrogger, renderizarFrogger,
   -- ** Funções auxiliares
-  renderizarPontos
+  renderizarPontos, chegouPonta
 ) where
 
 import Data.Maybe
@@ -36,16 +36,43 @@ import Graphics.Gloss.Interface.IO.Game
 import LI12223
 import FicheiroMapa_2022li1g012
 import RenderMapa_2022li1g012
+import JogoComum_2022li1g012
 import UI_2022li1g012
 import ErroM_2022li1g012
 
+import Tarefa3_2022li1g012
+
 -- | 'tempoFrogger' reage à passagem do tempo (nenhuma).
 tempoFrogger :: Float -> EstadoJogo -> IO EstadoJogo
-tempoFrogger _ = return
+tempoFrogger dt (EJ (Frogger t tl fp (Jogo j m) d l r) f a) = return $
+  EJ (Frogger (t + dt) tl' fp (Jogo j' m') d l r) f a
+  where tempos = (map (+ dt) tl)
+        (tl', m') = tempoJogo j tempos m
+        mFalso = mapaFalso tempos m
+        j' = animaJogador j Parado mFalso
+
+{-|
+  'chegouPonta' verifica se o jogador chegou à ponta do mapa em que a sua
+  pontuação aumenta.
+-}
+chegouPonta :: Jogador -- ^ Posição do jogador
+            -> Direcao -- ^ Direção do movimento
+            -> Bool    -- ^ Ponta a ser atingida
+            -> Bool    -- ^ Se a ponta foi atingida
+chegouPonta (Jogador (_, 0))  Cima  True  = True
+chegouPonta (Jogador (_, 19)) Baixo False = True
+chegouPonta _                 _     _     = False
 
 -- | 'eventoFrogger' reage ao input do utilizador.
 eventoFrogger :: Event -> EstadoJogo -> IO EstadoJogo
-eventoFrogger _ e = return e
+eventoFrogger e ej@(EJ (Frogger t tl fp (Jogo j m) d l (p, r)) f a)
+  | jgd == Parado = return $ ej
+  | otherwise     = let j' = animaJogador j jgd $ zerarMapa m
+                        d' = let (Move s) = jgd in s
+                        pt = chegouPonta j' d' l
+                        (l', p') = if pt then (not l, p + 1) else (l, p)
+                    in return $ EJ (Frogger t tl fp (Jogo j' m) d' l' (p', r)) f a
+  where jgd = eventosJogo e
 
 -- | 'renderizarPontos' devolve a imagem da pontuação do jogador.
 renderizarPontos :: BitmapData -- ^ Imagem da fonte
@@ -58,7 +85,7 @@ renderizarPontos f (p, r)
 
 -- | 'renderizarFrogger' é responsável por desenhar o jogo no ecrã.
 renderizarFrogger :: EstadoJogo -> IO Picture
-renderizarFrogger (EJ (Frogger t _ j d _ r) _ a) = return $ Pictures [
+renderizarFrogger (EJ (Frogger t _ _ j d _ r) _ a) = return $ Pictures [
   Translate (-320) (-320 - 32) $ renderizarJogo (tiles a) t d j,
   renderizarPontos (fonte a) r]
 
@@ -71,7 +98,8 @@ inicializarFrogger a fp = do
   m <- lerFicheiroMapa fp
   case m of Nothing -> inicializarErroM a
                          ("Falha ao abir o mapa:\n" ++ nomeMapa fp ++ " :(")
-            Just (r, m') -> let f = Frogger 0 fp (Jogo (Jogador (10, 19)) m')
-                                      Cima True (0, r)
+            Just (r, m') -> let f = Frogger 0 (replicate 20 0) fp
+                                      (Jogo (Jogador (10, 19)) m') Cima True
+                                      (0, r)
                             in return $ EJ f funcoesFrogger a
 
