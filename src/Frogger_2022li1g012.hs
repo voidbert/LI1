@@ -26,7 +26,7 @@ module Frogger_2022li1g012 (
   -- * Funções internas
   tempoFrogger, eventoFrogger, renderizarFrogger,
   -- ** Funções auxiliares
-  renderizarPontos, chegouPonta
+  renderizarPontos, chegouPonta, verificarGameOver, guardarRecorde
 ) where
 
 import Data.Maybe
@@ -34,18 +34,42 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 
 import LI12223
+import Tarefa3_2022li1g012
+import Tarefa4_2022li1g012
 import FicheiroMapa_2022li1g012
 import RenderMapa_2022li1g012
 import JogoComum_2022li1g012
 import UI_2022li1g012
 import ErroM_2022li1g012
+import {-# SOURCE #-} GameOver_2022li1g012 -- módulos mutuamente recursivos
 
-import Tarefa3_2022li1g012
+{-|
+  'guardarRecorde' regista o recorde do jogador no ficheiro do mapa. Este
+  apenas é editado caso o recorde tenha sido batido.
+-}
+guardarRecorde :: (Int, Int) -- ^ Pontuação e recorde
+               -> FilePath   -- ^ Mapa onde guardar recorde
+               -> IO Bool    -- ^ Se a operação teve sucesso
+guardarRecorde (p, r) fp
+  | p > r = lerFicheiroMapa fp >>= guardar
+  | otherwise = return True
+  where guardar Nothing = return False
+        guardar (Just (_, m)) = guardarFicheiroMapa p m fp
+
+{-|
+  'verificarGameOver' verifica se o jogador faleceu ou não, indo para o menu
+  de game over se necessário. Também regista o recorde do jogador.
+-}
+verificarGameOver :: EstadoJogo -> IO EstadoJogo
+verificarGameOver ej@(EJ (Frogger _ _ fp j _ _ r) _ a)
+  | jogoTerminou j = guardarRecorde r fp >>= \ x -> if x then
+      inicializarGO a fp else inicializarErroM a "Falha ao guardar\n\nrecorde :("
+  | otherwise = return $ ej
 
 -- | 'tempoFrogger' reage à passagem do tempo (nenhuma).
 tempoFrogger :: Float -> EstadoJogo -> IO EstadoJogo
-tempoFrogger dt (EJ (Frogger t tl fp (Jogo j m) d l r) f a) = return $
-  EJ (Frogger (t + dt) tl' fp (Jogo j' m') d l r) f a
+tempoFrogger dt (EJ (Frogger t tl fp (Jogo j m) d l r) f a) = verificarGameOver
+  $ EJ (Frogger (t + dt) tl' fp (Jogo j' m') d l r) f a
   where tempos = (map (+ dt) tl)
         (tl', m') = tempoJogo j tempos m
         mFalso = mapaFalso tempos m
@@ -71,7 +95,8 @@ eventoFrogger e ej@(EJ (Frogger t tl fp (Jogo j m) d l (p, r)) f a)
                         d' = let (Move s) = jgd in s
                         pt = chegouPonta j' d' l
                         (l', p') = if pt then (not l, p + 1) else (l, p)
-                    in return $ EJ (Frogger t tl fp (Jogo j' m) d' l' (p', r)) f a
+                    in verificarGameOver $
+                       EJ (Frogger t tl fp (Jogo j' m) d' l' (p', r)) f a
   where jgd = eventosJogo e
 
 -- | 'renderizarPontos' devolve a imagem da pontuação do jogador.

@@ -130,9 +130,9 @@ data DadosJogo = MenuP
                    Bool       -- ^ Se a pontuação aumenta em cima ou baixo
                    (Int, Int) -- ^ Pontuação e recorde
                | GameOver
-                   (Float, Float)
-                   [Botao]
-                   Picture
+                   (Float, Float) -- ^ Posição do rato
+                   [Botao]        -- ^ Botões de baixo
+                   FilePath       -- ^ Vazio para modo infinito, ou mapa frogger
                | Play
 
 

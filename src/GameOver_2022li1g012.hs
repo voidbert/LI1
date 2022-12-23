@@ -27,6 +27,7 @@ import Graphics.Gloss.Interface.IO.Game
 
 import LI12223
 import UI_2022li1g012
+import Frogger_2022li1g012
 import {-# SOURCE #-} MenuP_2022li1g012
 
 -- N importa no caso
@@ -40,10 +41,13 @@ tempoGO _ = return
 eventoGO :: Event 
          -> EstadoJogo 
          -> IO (EstadoJogo)
-eventoGO (EventMotion (x, y)) (EJ (GameOver _ bts _) fj a) 
-  = return $                   EJ (GameOver (x, y) bts (balde a)) fj a
+eventoGO (EventMotion (x, y)) (EJ (GameOver _ bts fp) fj a) 
+  = return $ EJ (GameOver (x, y) bts fp) fj a
 eventoGO (EventKey (MouseButton LeftButton) Up _ p)
-  (EJ (GameOver _ bts _) _ a)
+  (EJ (GameOver _ bts fp) _ a)
+  -- TODO - modo infinito
+  | dentro (fst (bts !! 0)) p = if null fp then undefined else
+      inicializarFrogger a fp
   | dentro (fst (bts !! 1)) p = inicializarMenu a
 eventoGO _ e = return e
 
@@ -53,16 +57,15 @@ renderizarGO :: EstadoJogo
              -> IO Picture
 renderizarGO (EJ (GameOver p bts _) fj a) = return $ Pictures [
   Translate 0 250 $ Scale 5 5 $ snd $ mrTexto (fonte a) TCentro "Game\nOver",
-  balde a,
-  Pictures $ map (imagemBotao p) bts]
+  balde a, Pictures $ map (imagemBotao p) bts ]
 
 {-
 -}
-inicializarGO :: Assets 
-              -> IO EstadoJogo
-inicializarGO a = return $ EJ (GameOver (0,0) bts i) funcoesJogoGO a
-  where i = balde a 
-        b1@((_, (w1, h1)), _) = scaleBt 2 $ mrBotao (fonte a) "Jogar de novo"
+inicializarGO :: Assets         -- ^ Recursos do jogo
+              -> FilePath       -- ^ Vazio para modo infinito, ou mapa frogger
+              -> IO EstadoJogo  -- ^ Estado inicial do menu
+inicializarGO a fp = return $ EJ (GameOver (0,0) bts fp) funcoesJogoGO a
+  where b1@((_, (w1, h1)), _) = scaleBt 2 $ mrBotao (fonte a) "Jogar de novo"
         b2@((_, (w2, h2)), _) = scaleBt 2 $ mrBotao (fonte a) "Voltar ao menu"
         b1' = translateBt (384 - w1 / 2 - 16)  (-384 + h1 / 2 + 16) b1
         b2' = translateBt (-384 + w2 / 2 + 16) (-384 + h2 / 2 + 16) b2
