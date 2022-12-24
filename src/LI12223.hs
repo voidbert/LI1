@@ -129,12 +129,17 @@ data DadosJogo = MenuP
                    Direcao    -- ^ Orientação do jogador
                    Bool       -- ^ Se a pontuação aumenta em cima ou baixo
                    (Int, Int) -- ^ Pontuação e recorde
+               | Inf
+                  Float           -- ^ Tempo decorrido
+                  [Float]         -- ^ Tempo desde a última atualização de cada linha
+                  Float           -- ^ Progresso do smooth scrolling vertical
+                  Jogo            -- ^ Mapa e jogador
+                  Direcao         -- ^ Orientação do jogador
+                  (Int, Int) -- ^ Pontuação máxima e recorde
                | GameOver
                    (Float, Float) -- ^ Posição do rato
                    [Botao]        -- ^ Botões de baixo
                    FilePath       -- ^ Vazio para modo infinito, ou mapa frogger
-               | Play
-
 
 {-|
   Funções associadas a um 'EstadoJogo', responsáveis pela sua atualização após

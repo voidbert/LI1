@@ -48,7 +48,8 @@ executable 2022li1g012
     GameOver_2022li1g012
     JogoComum_2022li1g012
     Frogger_2022li1g012
-  build-depends:    base >=4.13.3.0 && < 5, gloss >=1.13.0.1, bmp >=1.2, directory, filepath
+    Infinito_2022li1g012
+  build-depends:    base >=4.13.3.0 && < 5, gloss >=1.13.0.1, bmp >=1.2, directory, filepath, random
   ghc-options: -O2 -threaded
   hs-source-dirs:   src
   default-language: Haskell2010

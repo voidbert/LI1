@@ -34,6 +34,7 @@ import Graphics.Gloss.Interface.IO.Game
 import LI12223
 import UI_2022li1g012
 import MenuF_2022li1g012
+import Infinito_2022li1g012
 
 -- | 'tempoMenuP' reage à passagem do tempo (nenhuma)
 tempoMenuP :: Float -> EstadoJogo -> IO EstadoJogo
@@ -48,6 +49,7 @@ eventoMenuP (EventMotion (x, y)) (EJ (MenuP _ bts) f b) =
   return $ EJ (MenuP (x, y) bts) f b
 eventoMenuP (EventKey (MouseButton LeftButton) Up _ (x, y))
             ej@(EJ (MenuP _ bts) _ a)
+  | dentro (fst (bts !! 0)) (x, y) = inicializarInf a
   | dentro (fst (bts !! 1)) (x, y) = inicializarMenuF a 0
   | dentro (fst (bts !! 2)) (x, y) = exitSuccess -- Botão sair
 eventoMenuP _ e = return e

@@ -23,11 +23,15 @@ Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
 module FicheiroMapa_2022li1g012 (
   -- * Listagem e gestão de mapas
   listarMapas, diretoriaMapas, nomeMapa, apagarMapa,
+  -- * Recordes do modo infinito
+  lerRecordeInf, guardarRecordeInf,
   -- * Exportação e importação de mapas
   mapaStr, parseMapa, lerFicheiroMapa, guardarFicheiroMapa,
   -- * Funções auxiliares
   -- ** Exportação de mapas
   terrenoStr, obstaculoC, linhaStr,
+  -- ** Recordes do modo infinito
+  ficheiroRecorde,
   -- ** Importação de mapas
   parseTerreno, parseObstaculo, parseObstaculos, parseLinha, medirMapa
   ) where
@@ -76,6 +80,38 @@ apagarMapa f = do
   s <- tryIOError (removeFile f)
   case s of (Left _)  -> return False
             (Right _) -> return True
+
+{-|
+  'ficheiroRecorde' devolve o caminho de ficheiro para o ficheiro onde é
+  armazenado o recorde do modo infinito. Caso não exista, é criado e o recorde
+  é definido como zero.
+-}
+ficheiroRecorde :: IO FilePath
+ficheiroRecorde = do
+  d <- getXdgDirectory XdgData "CrossyRoad"
+  createDirectoryIfMissing True d
+  let f = d </> "Recorde"
+  e <- doesFileExist f
+  if e then return f else writeFile f "0" >> return f
+
+-- | 'lerRecordeInf' lê do disco o recorde do jogador no modo infinito.
+lerRecordeInf :: IO (Maybe Int)
+lerRecordeInf = do
+  f <- tryIOError ficheiroRecorde
+  case f of (Left _)   -> return Nothing
+            (Right f') -> do c <- tryIOError $ readFile f'
+                             case c of (Left _)  -> return Nothing
+                                       (Right c') -> return $ readMaybe c'
+
+-- | 'guardarRecordeInf' guarda no disco o recorde do jogador no modo infinito.
+guardarRecordeInf :: Int -> IO Bool
+guardarRecordeInf n = do
+ f <- tryIOError ficheiroRecorde
+ case f of (Left _)  -> return False
+           (Right f') -> do r <- tryIOError $ writeFile f' (show n)
+                            case r of (Left _)  -> return False
+                                      (Right _) -> return True
+
 
 {-|
   'terrenoStr' converte o 'Terreno' de uma linha para uma 'String', para ser

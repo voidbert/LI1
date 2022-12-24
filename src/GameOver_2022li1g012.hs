@@ -28,6 +28,7 @@ import Graphics.Gloss.Interface.IO.Game
 import LI12223
 import UI_2022li1g012
 import Frogger_2022li1g012
+import Infinito_2022li1g012
 import {-# SOURCE #-} MenuP_2022li1g012
 
 -- N importa no caso
@@ -45,8 +46,7 @@ eventoGO (EventMotion (x, y)) (EJ (GameOver _ bts fp) fj a)
   = return $ EJ (GameOver (x, y) bts fp) fj a
 eventoGO (EventKey (MouseButton LeftButton) Up _ p)
   (EJ (GameOver _ bts fp) _ a)
-  -- TODO - modo infinito
-  | dentro (fst (bts !! 0)) p = if null fp then undefined else
+  | dentro (fst (bts !! 0)) p = if null fp then inicializarInf a else
       inicializarFrogger a fp
   | dentro (fst (bts !! 1)) p = inicializarMenu a
 eventoGO _ e = return e
