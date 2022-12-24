@@ -25,6 +25,7 @@ module LI12223 (
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import Codec.BMP
+import System.Process
 
 import UI_2022li1g012
 
@@ -94,8 +95,13 @@ data Assets = Assets {
   fonte :: BitmapData,
   tiles :: BitmapData,
   balde :: Picture
-  }
+ }
 
+data Audios = Audio {
+  menu :: Maybe ProcessHandle,
+  jogo :: Maybe ProcessHandle,
+  gameOver :: Maybe ProcessHandle              
+ }
 {-|
   Dados associados a um 'EstadoJogo', necessários de serem passados de
   atualização em atualização ou de frame em frame.
