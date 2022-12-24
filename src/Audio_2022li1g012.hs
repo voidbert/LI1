@@ -49,7 +49,7 @@ comecarGO a = do
   (Audio m j g) <- pararJogo a
   h <- tryIOError $ spawnProcess "mpv" ["--loop", "--no-terminal", "AudioPlaylist/GameOver.wav"] -- abrir mpv
   case h of (Left _)  -> return $ Audio m Nothing g -- Falha ao abrir
-            (Right j') -> return $ Audio m (Just j') g -- O mpv abriu
+            (Right g') -> return $ Audio m j (Just g') -- O mpv abriu
 
 pararGO :: Audios -> IO Audios
 pararGO a@(Audio m j Nothing) = return a -- ^ Não parar o que já está parado
@@ -60,8 +60,11 @@ pararGO (Audio m j (Just g)) = do
 -- Isto é só para testagem. Na prática tens o gloss.
 loopInput :: Audios -> IO ()
 loopInput a = do
-  putStrLn "\n\n\n1) Começar menu\n2) Começar jogo\n3) Parar menu\n4) Parar jogo\n\n\n"
+  putStrLn "\n\n\n1) Começar menu\n2) Começar jogo\n3) Começar Game Over\n4) Parar menu\n5) Parar jogo\n6) Parar Game Over\n"
   c <- getChar
   case c of '1' -> comecarMenu a >>= loopInput
             '2' -> comecarJogo a >>= loopInput
-            '3' -> pararMenu   a >>= loopInput
+            '3' -> comecarGO   a >>= loopInput
+            '4' -> pararMenu   a >>= loopInput
+            '5' -> pararJogo   a >>= loopInput
+            '6' -> pararGO     a >>= loopInput
