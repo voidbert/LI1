@@ -53,10 +53,10 @@ import {-# SOURCE #-} GameOver_2022li1g012 -- módulos mutuamente recursivos
 
 -- | 'calcularPontos' calcula a pontuação do jogador
 calcularPontos :: Jogador    -- ^ Posição do jogador
-               -> Float      -- ^ Deslize vertical
+               -> Int        -- ^ Unidades de deslize vertical
                -> (Int, Int) -- ^ Pontuação máxima e recorde
                -> (Int, Int) -- ^ Pontuação e recorde
-calcularPontos (Jogador (_, y)) d (m, r) = (max m (18 - y + floor d), r)
+calcularPontos (Jogador (_, y)) d (m, r) = (max m (18 - y + d), r)
 
 {-|
   'guardarRecorde' regista o recorde do jogador num ficheiro caso tenha sido
@@ -71,8 +71,8 @@ guardarRecorde (p, r) = if p > r then guardarRecordeInf p else return True
   de game over se necessário. Também regista o recorde do jogador.
 -}
 verificarGameOver :: EstadoJogo -> IO EstadoJogo
-verificarGameOver ej@(EJ (Inf _ _ dv j@(Jogo jgd _) _ r) _ a)
-  | jogoTerminou j = guardarRecorde (calcularPontos jgd dv r) >>=
+verificarGameOver ej@(EJ (Inf _ _ _ udv j@(Jogo jgd _) _ r) _ a)
+  | jogoTerminou j = guardarRecorde (calcularPontos jgd udv r) >>=
       \ x -> if x then inicializarGO a "" else inicializarErroM a
         "Falha ao guardar\n\nrecorde :("
   | otherwise = return $ ej
@@ -81,49 +81,51 @@ verificarGameOver ej@(EJ (Inf _ _ dv j@(Jogo jgd _) _ r) _ a)
   'deslizarTempo' desliza o mapa conforme a passagem do tempo, sendo a
   velocidade de deslize aumentada à medida que a pontuação aumenta.
 -}
-deslizarTempo :: Int           -- ^ Número aleatório de 1 a 100
-              -> (Int, Int)    -- ^ Pontuação e recorde
-              -> Float         -- ^ Tempo desde a útlima atualização (dt)
-              -> Float         -- ^ Estado de deslizamento vertical
-              -> Jogo          -- ^ Jogo a ser atualizado
-              -> (Float, Jogo) -- ^ Deslizamento e jogo atualizados
-deslizarTempo i (p, _) dt dv j =
-  (dv + ddv, if atl then deslizaJogo i j else j)
+deslizarTempo :: Int                -- ^ Número aleatório de 1 a 100
+              -> (Int, Int)         -- ^ Pontuação e recorde
+              -> Float              -- ^ Tempo desde a útlima atualização (dt)
+              -> Float              -- ^ Estado de deslizamento vertical
+              -> Int                -- ^ Unidades de deslizamento vertical
+              -> Jogo               -- ^ Jogo a ser atualizado
+              -> (Float, Int, Jogo) -- ^ Deslizamento, unidades e jogo atualizados
+deslizarTempo i (p, _) dt dv udv j = if atl then
+  (dv', udv + 1, deslizaJogo i j) else (dv', udv, j)
   where -- Diferença da velocidade em função da pontuação
         ddv = (0.5 * dt) * (1 - 1 / (0.2 * (fromInteger $ toInteger (p + 5))))
-        -- Se é preciso (ou não) avançar o mapa (e não só translação no ecrã)
-        atl = ceiling dv == floor (dv + ddv) && ddv /= 0
+        -- Novo valor de dv e se é preciso atualizar o mapa
+        (dv', atl) = if dv + ddv >= 1 then (dv + ddv - 1, True)
+                        else (dv + ddv, False)
 
 -- | 'deslizarPosicao' avança o mapa caso o jogador avance muito para a frente.
-deslizarPosicao :: Int           -- ^ Número aleatório de 1 a 100
-                -> Float         -- ^ Estado do deslize vertical
-                -> Jogo          -- ^ Jogador e mapa
-                -> (Float, Jogo) -- ^ Estado de deslize e jogo atualizados
-deslizarPosicao i dv j@(Jogo (Jogador (_, y)) _) = if y >= 18 then (dv, j) else
-  (dv + 1, deslizaJogo i j)
+deslizarPosicao :: Int         -- ^ Número aleatório de 1 a 100
+                -> Int         -- ^ Unidades de deslize vertical
+                -> Jogo        -- ^ Jogador e mapa
+                -> (Int, Jogo) -- ^ Unidades de deslize e jogo atualizados
+deslizarPosicao i udv j@(Jogo (Jogador (_, y)) _) = if y >= 18 then
+  (udv, j) else (udv + 1, deslizaJogo i j)
 
 -- | 'tempoInf' reage à passagem do tempo, deslizando e animando o mapa.
 tempoInf :: Float -> EstadoJogo -> IO EstadoJogo
-tempoInf dt (EJ (Inf t tl dv (Jogo j m) d r) f a) = do
+tempoInf dt (EJ (Inf t tl dv udv (Jogo j m) d r) f a) = do
   rdm <- randomRIO (0, 100)
   let tempos = (map (+ dt) tl)
       (tl', m') = tempoJogo j tempos m
       mFalso = mapaFalso tempos m
       j' = animaJogador j Parado mFalso
-      (dv', jg) = deslizarTempo rdm r dt dv (Jogo j' m')
-  verificarGameOver $ EJ (Inf (t + dt) tl' dv' jg d r) f a
+      (dv', udv', jg) = deslizarTempo rdm r dt dv udv (Jogo j' m')
+  verificarGameOver $ EJ (Inf (t + dt) tl' dv' udv' jg d r) f a
 
 -- | 'eventoInf' reage ao input do utilizador, controlando o jogador.
 eventoInf :: Event -> EstadoJogo -> IO EstadoJogo
-eventoInf e ej@(EJ (Inf t tl dv (Jogo j m) l r) f a)
+eventoInf e ej@(EJ (Inf t tl dv udv (Jogo j m) l r) f a)
   | jgd == Parado = return $ ej
   | otherwise     = randomRIO (0, 100) >>= \ i ->
                       let j' = animaJogador j jgd $ zerarMapa m
                           d' = let (Move s) = jgd in s
-                          r' = calcularPontos j dv r
-                          (dv', jogo) = deslizarPosicao i dv (Jogo j' m)
+                          r' = calcularPontos j udv r
+                          (udv', jogo) = deslizarPosicao i udv (Jogo j' m)
                       in verificarGameOver $
-                         EJ (Inf t tl dv' jogo d' r') f a
+                         EJ (Inf t tl dv udv' jogo d' r') f a
   where jgd = eventosJogo e
 
 -- | 'renderizarPontos' devolve a imagem da pontuação do jogador.
@@ -135,16 +137,30 @@ renderizarPontos f (p, r)
   | otherwise = texto $ show p
   where texto = Translate 0 340 . Scale 5 5 . snd . mrTexto f TCentro
 
+{-|
+  'renderizarRestaurante' devolve a imagem para desenhar o restaurante no
+  início do jogo.
+-}
+renderizarRestaurante :: BitmapData -- ^ Mapa de tiles
+                      -> Jogador    -- ^ Posição do jogador
+                      -> Float      -- ^ Estado de deslizamento smooth
+                      -> Int        -- ^ Unidades de deslizamento vertical
+                      -> Picture    -- ^ Imagem resultante
+renderizarRestaurante a (Jogador (_, y)) dv udv =
+  let dy = fromIntegral udv + dv in Translate (320 - 64) (-320 + 32 - dy * 32)
+    $ Scale 2 2 $ BitmapSection (Rectangle (0, 16) (64, 64)) a
+
 -- | 'renderizarInf' é responsável por desenhar o jogo no ecrã.
 renderizarInf :: EstadoJogo -> IO Picture
-renderizarInf (EJ (Inf t _ dv j@(Jogo jgd _) d r) _ a) = return $ Pictures [
+renderizarInf (EJ (Inf t _ dv udv j@(Jogo jgd@(Jogador (_, y)) _) d r) _ a) = return $ Pictures [
   Translate (-320) (-320 - 32 - dy) $ renderizarJogo (tiles a) t d j,
+  renderizarRestaurante (tiles a) jgd dv udv,
 
   -- Retângulos para esconder extra do mapa (deslize)
   Translate 0 (-320 - 64) $ Color black $ rectangleSolid 768 64,
   Translate 0 320 $ Color black $ rectangleSolid 768 64,
 
-  renderizarPontos (fonte a) $ calcularPontos jgd dv r ]
+  renderizarPontos (fonte a) $ calcularPontos jgd udv r]
 
   -- Posição do mapa para o smooth scrolling
   where dy = (dv - (fromIntegral $ floor dv)) * 32
@@ -152,7 +168,7 @@ renderizarInf (EJ (Inf t _ dv j@(Jogo jgd _) d r) _ a) = return $ Pictures [
 -- | 'mapaInicial' gera o mapa para o começo do jogo.
 mapaInicial :: IO Mapa
 mapaInicial = aux 17 $ Mapa 20 [le, lr, lr, lr]
-  where lr = (Relva,     replicate 20 Nenhum)
+  where lr = (Relva,     replicate 16 Nenhum ++ replicate 4 Arvore)
         le = (Estrada 0, replicate 20 Nenhum)
         aux n m = if n <= 0 then return m else
                     randomRIO (0, 100) >>= aux (n - 1) . estendeMapa m
@@ -165,7 +181,7 @@ inicializarInf a = do
   r <- lerRecordeInf
   m' <- mapaInicial
   case r of Nothing   -> inicializarErroM a "Falha ao ler\n\no recorde :("
-            (Just r') -> let i = Inf 0 (replicate 21 0) 0
+            (Just r') -> let i = Inf 0 (replicate 21 0) 0 0
                                      (Jogo (Jogador (10, 18)) m') Cima (0, r')
                             in return $ EJ i funcoesInf a
 

@@ -133,6 +133,7 @@ data DadosJogo = MenuP
                   Float           -- ^ Tempo decorrido
                   [Float]         -- ^ Tempo desde a última atualização de cada linha
                   Float           -- ^ Progresso do smooth scrolling vertical
+                  Int             -- ^ Unidades de deslize vertical (nº. de 'deslizaJogo')
                   Jogo            -- ^ Mapa e jogador
                   Direcao         -- ^ Orientação do jogador
                   (Int, Int) -- ^ Pontuação máxima e recorde
