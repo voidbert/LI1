@@ -72,6 +72,7 @@ renderizarGO (EJ (GameOver p bts _) fj a) = return $ Pictures [
   balde a, Pictures $ map (imagemBotao p) bts ]
 
 -- | 'inicializarGO' devolve o estado estado inicial do menu de "Game Over".
+
 inicializarGO :: Assets         -- ^ Recursos do jogo
               -> FilePath       -- ^ Vazio para modo infinito, ou mapa frogger
               -> IO EstadoJogo  -- ^ Estado inicial do menu
