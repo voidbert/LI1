@@ -26,7 +26,7 @@ Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
 -}
 module Gerador_2022li1g012 (
   -- * Dificuldade do jogo
-  Dificuldade(..), facil,
+  facil, medio, dificil,
   -- * Geração de mapas
   -- ** Geração de terrenos
   gerarTerreno, terrenosExceto, contarTerrenos, gerarVelocidade,
@@ -43,18 +43,31 @@ import System.Random.Shuffle
 import LI12223
 import Tarefa5_2022li1g012
 
--- A 'Dificuldade' do jogo define os parâmetros de geração do mapa.
-data Dificuldade = Dif
-  (Terreno -> Int)            -- ^ Terrenos consecutivos máximos permitidos
-  (Terreno -> Int)            -- ^ Velocidade máxima positiva permitida
-  (Terreno -> (Float, Float)) -- ^ Intervalo (0 a 1) de quantidade de obstáculos
-
 facil :: Dificuldade
 facil = Dif csc vt ro
-  where csc _ = 3
+  where csc Relva = 3
+        csc _     = 2
         vt  _ = 2
-        ro Relva = (0.2, 0.5)
-        ro _ = (0.4, 0.6)
+        ro Relva       = (0.1, 0.3)
+        ro (Rio _)     = (0.4, 0.6)
+        ro (Estrada _) = (0.1, 0.2)
+
+medio :: Dificuldade
+medio = Dif csc vt ro
+  where csc Relva = 2
+        csc _     = 3
+        vt  _     = 2
+        ro Relva       = (0.1, 0.3)
+        ro (Rio _)     = (0.4, 0.5)
+        ro (Estrada _) = (0.2, 0.3)
+
+dificil :: Dificuldade
+dificil = Dif csc vt ro
+  where csc Relva = 1
+        csc _     = 4
+        vt  _     = 3
+        ro Relva = (0.4, 0.6)
+        ro _     = (0.3, 0.4)
 
 {-|
   'gerarVelocidade' gera a velocidade de um terreno de acordo com as restrições

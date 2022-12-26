@@ -65,14 +65,16 @@ guardarRecorde :: (Int, Int) -- ^ Pontuação e recorde
                -> IO Bool    -- ^ Se a operação teve sucesso
 guardarRecorde (p, r) = if p > r then guardarRecordeInf p else return True
 
+-- TODO - recorde com dificuldade
+
 {-|
   'verificarGameOver' verifica se o jogador faleceu ou não, indo para o menu
   de game over se necessário. Também regista o recorde do jogador.
 -}
 verificarGameOver :: EstadoJogo -> IO EstadoJogo
-verificarGameOver ej@(EJ (Inf _ _ _ udv j@(Jogo jgd _) _ r) _ a)
+verificarGameOver ej@(EJ (Inf dif _ _ _ udv j@(Jogo jgd _) _ r) _ a)
   | jogoTerminou j = guardarRecorde (calcularPontos jgd udv r) >>=
-      \ x -> if x then inicializarGO a "" else inicializarErroM a
+      \ x -> if x then inicializarGO a (Right dif) else inicializarErroM a
         "Falha ao guardar\n\nrecorde :("
   | otherwise = return $ ej
 
@@ -82,14 +84,15 @@ verificarGameOver ej@(EJ (Inf _ _ _ udv j@(Jogo jgd _) _ r) _ a)
 -}
 deslizarTempo :: RandomGen gen
               => gen                -- ^ Seed para geração de números aleatórios
+              -> Dificuldade        -- ^ Dificuldade do jogo
               -> (Int, Int)         -- ^ Pontuação e recorde
               -> Float              -- ^ Tempo desde a útlima atualização (dt)
               -> Float              -- ^ Estado de deslizamento vertical
               -> Int                -- ^ Unidades de deslizamento vertical
               -> Jogo               -- ^ Jogo a ser atualizado
               -> (Float, Int, Jogo) -- ^ Deslizamento, unidades e jogo atualizados
-deslizarTempo sd (p, _) dt dv udv j = if atl then
-  (dv', udv + 1, deslizaJogo' sd facil j) else (dv', udv, j)
+deslizarTempo sd d (p, _) dt dv udv j = if atl then
+  (dv', udv + 1, deslizaJogo' sd d j) else (dv', udv, j)
   where -- Diferença da velocidade em função da pontuação
         ddv = (0.5 * dt) * (1 - 1 / (0.2 * (fromInteger $ toInteger (p + 5))))
         -- Novo valor de dv e se é preciso atualizar o mapa
@@ -99,34 +102,35 @@ deslizarTempo sd (p, _) dt dv udv j = if atl then
 -- | 'deslizarPosicao' avança o mapa caso o jogador avance muito para a frente.
 deslizarPosicao :: RandomGen gen
                 => gen           -- ^ Seed para geração de números aleatórios
+                -> Dificuldade   -- ^ Dificuldade do jogo
                 -> Int           -- ^ Unidades de deslize vertical
                 -> Jogo          -- ^ Jogador e mapa
                 -> (Int, Jogo)   -- ^ Unidades de deslize e jogo atualizados
-deslizarPosicao sd udv j@(Jogo (Jogador (_, y)) _) = if y >= 18 then
-  (udv, j) else (udv + 1, deslizaJogo' sd facil j)
+deslizarPosicao sd d udv j@(Jogo (Jogador (_, y)) _) = if y >= 18 then
+  (udv, j) else (udv + 1, deslizaJogo' sd d j)
 
 -- | 'tempoInf' reage à passagem do tempo, deslizando e animando o mapa.
 tempoInf :: Float -> EstadoJogo -> IO EstadoJogo
-tempoInf dt (EJ (Inf t tl dv udv (Jogo j m) d r) f a) = do
+tempoInf dt (EJ (Inf dif t tl dv udv (Jogo j m) d r) f a) = do
   rdm <- newStdGen
   let tempos = (map (+ dt) tl)
       (tl', m') = tempoJogo j tempos m
       mFalso = mapaFalso tempos m
       j' = animaJogador j Parado mFalso
-      (dv', udv', jg) = deslizarTempo rdm r dt dv udv (Jogo j' m')
-  verificarGameOver $ EJ (Inf (t + dt) tl' dv' udv' jg d r) f a
+      (dv', udv', jg) = deslizarTempo rdm dif r dt dv udv (Jogo j' m')
+  verificarGameOver $ EJ (Inf dif (t + dt) tl' dv' udv' jg d r) f a
 
 -- | 'eventoInf' reage ao input do utilizador, controlando o jogador.
 eventoInf :: Event -> EstadoJogo -> IO EstadoJogo
-eventoInf e ej@(EJ (Inf t tl dv udv (Jogo j m) l r) f a)
+eventoInf e ej@(EJ (Inf dif t tl dv udv (Jogo j m) l r) f a)
   | jgd == Parado = return $ ej
   | otherwise     = newStdGen >>= \ sd ->
                       let j' = animaJogador j jgd $ zerarMapa m
                           d' = let (Move s) = jgd in s
                           r' = calcularPontos j udv r
-                          (udv', jogo) = deslizarPosicao sd udv (Jogo j' m)
+                          (udv', jogo) = deslizarPosicao sd dif udv (Jogo j' m)
                       in verificarGameOver $
-                         EJ (Inf t tl dv udv' jogo d' r') f a
+                         EJ (Inf dif t tl dv udv' jogo d' r') f a
   where jgd = eventosJogo e
 
 -- | 'renderizarPontos' devolve a imagem da pontuação do jogador.
@@ -153,7 +157,8 @@ renderizarRestaurante a (Jogador (_, y)) dv udv =
 
 -- | 'renderizarInf' é responsável por desenhar o jogo no ecrã.
 renderizarInf :: EstadoJogo -> IO Picture
-renderizarInf (EJ (Inf t _ dv udv j@(Jogo jgd@(Jogador (_, y)) _) d r) _ a) = return $ Pictures [
+renderizarInf (EJ (Inf _ t _ dv udv j@(Jogo jgd@(Jogador (_, y)) _) d r) _ a) =
+  return $ Pictures [
   Translate (-320) (-320 - 32 - dy) $ renderizarJogo (tiles a) t d j,
   renderizarRestaurante (tiles a) jgd dv udv,
 
@@ -167,22 +172,23 @@ renderizarInf (EJ (Inf t _ dv udv j@(Jogo jgd@(Jogador (_, y)) _) d r) _ a) = re
   where dy = (dv - (fromIntegral $ floor dv)) * 32
 
 -- | 'mapaInicial' gera o mapa para o começo do jogo.
-mapaInicial :: IO Mapa
-mapaInicial = aux 17 $ Mapa 20 [le, lr, lr, lr]
+mapaInicial :: Dificuldade -> IO Mapa
+mapaInicial d = aux 17 $ Mapa 20 [le, lr, lr, lr]
   where lr = (Relva,     replicate 16 Nenhum ++ replicate 4 Arvore)
         le = (Estrada 0, replicate 20 Nenhum)
         aux n m = if n <= 0 then return m else newStdGen >>=
-                    aux (n - 1) . (\ r -> estendeMapa' r facil m)
+                    aux (n - 1) . (\ r -> estendeMapa' r d m)
 
 -- | 'inicializarInf' devolve o estado inicial do modo infinito.
-inicializarInf :: Assets        -- ^ Recurso do jogo
+inicializarInf :: Assets        -- ^ Recursos do jogo
+               -> Dificuldade   -- ^ Dificuldade do jogo
                -> IO EstadoJogo -- ^ Estado inicial do menu frogger
-inicializarInf a = do
+inicializarInf a d = do
   let funcoesInf = FJ tempoInf eventoInf renderizarInf
   r <- lerRecordeInf
-  m' <- mapaInicial
+  m' <- mapaInicial d
   case r of Nothing   -> inicializarErroM a "Falha ao ler\n\no recorde :("
-            (Just r') -> let i = Inf 0 (replicate 21 0) 0 0
+            (Just r') -> let i = Inf d 0 (replicate 21 0) 0 0
                                      (Jogo (Jogador (10, 18)) m') Cima (0, r')
                             in return $ EJ i funcoesInf a
 
