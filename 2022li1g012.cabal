@@ -37,19 +37,25 @@ executable 2022li1g012
     Tarefa3_2022li1g012
     Tarefa4_2022li1g012
     Tarefa5_2022li1g012
-    UI_2022li1g012
-    MenuP_2022li1g012
+
     FicheiroMapa_2022li1g012
+    UI_2022li1g012
+    RenderMapa_2022li1g012
+    Gerador_2022li1g012
+
+    MenuP_2022li1g012
     ErroM_2022li1g012
     MenuF_2022li1g012
     MPreEdit_2022li1g012
-    RenderMapa_2022li1g012
     Editor_2022li1g012
-    GameOver_2022li1g012
+
     JogoComum_2022li1g012
     Frogger_2022li1g012
     Infinito_2022li1g012
-  build-depends:    base >=4.13.3.0 && < 5, gloss >=1.13.0.1, bmp >=1.2, directory, filepath, random
+    GameOver_2022li1g012
+
+  build-depends:    base >=4.13.3.0 && < 5, gloss >=1.13.0.1, bmp >=1.2,
+    directory, filepath, random, random-shuffle
   ghc-options: -O2 -threaded
   hs-source-dirs:   src
   default-language: Haskell2010

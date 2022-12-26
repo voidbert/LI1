@@ -40,10 +40,9 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 
 import LI12223
-import Tarefa2_2022li1g012
 import Tarefa3_2022li1g012
 import Tarefa4_2022li1g012
-import Tarefa5_2022li1g012
+import Gerador_2022li1g012
 import FicheiroMapa_2022li1g012
 import RenderMapa_2022li1g012
 import JogoComum_2022li1g012
@@ -81,15 +80,16 @@ verificarGameOver ej@(EJ (Inf _ _ _ udv j@(Jogo jgd _) _ r) _ a)
   'deslizarTempo' desliza o mapa conforme a passagem do tempo, sendo a
   velocidade de deslize aumentada à medida que a pontuação aumenta.
 -}
-deslizarTempo :: Int                -- ^ Número aleatório de 1 a 100
+deslizarTempo :: RandomGen gen
+              => gen                -- ^ Seed para geração de números aleatórios
               -> (Int, Int)         -- ^ Pontuação e recorde
               -> Float              -- ^ Tempo desde a útlima atualização (dt)
               -> Float              -- ^ Estado de deslizamento vertical
               -> Int                -- ^ Unidades de deslizamento vertical
               -> Jogo               -- ^ Jogo a ser atualizado
               -> (Float, Int, Jogo) -- ^ Deslizamento, unidades e jogo atualizados
-deslizarTempo i (p, _) dt dv udv j = if atl then
-  (dv', udv + 1, deslizaJogo i j) else (dv', udv, j)
+deslizarTempo sd (p, _) dt dv udv j = if atl then
+  (dv', udv + 1, deslizaJogo' sd facil j) else (dv', udv, j)
   where -- Diferença da velocidade em função da pontuação
         ddv = (0.5 * dt) * (1 - 1 / (0.2 * (fromInteger $ toInteger (p + 5))))
         -- Novo valor de dv e se é preciso atualizar o mapa
@@ -97,17 +97,18 @@ deslizarTempo i (p, _) dt dv udv j = if atl then
                         else (dv + ddv, False)
 
 -- | 'deslizarPosicao' avança o mapa caso o jogador avance muito para a frente.
-deslizarPosicao :: Int         -- ^ Número aleatório de 1 a 100
-                -> Int         -- ^ Unidades de deslize vertical
-                -> Jogo        -- ^ Jogador e mapa
-                -> (Int, Jogo) -- ^ Unidades de deslize e jogo atualizados
-deslizarPosicao i udv j@(Jogo (Jogador (_, y)) _) = if y >= 18 then
-  (udv, j) else (udv + 1, deslizaJogo i j)
+deslizarPosicao :: RandomGen gen
+                => gen           -- ^ Seed para geração de números aleatórios
+                -> Int           -- ^ Unidades de deslize vertical
+                -> Jogo          -- ^ Jogador e mapa
+                -> (Int, Jogo)   -- ^ Unidades de deslize e jogo atualizados
+deslizarPosicao sd udv j@(Jogo (Jogador (_, y)) _) = if y >= 18 then
+  (udv, j) else (udv + 1, deslizaJogo' sd facil j)
 
 -- | 'tempoInf' reage à passagem do tempo, deslizando e animando o mapa.
 tempoInf :: Float -> EstadoJogo -> IO EstadoJogo
 tempoInf dt (EJ (Inf t tl dv udv (Jogo j m) d r) f a) = do
-  rdm <- randomRIO (0, 100)
+  rdm <- newStdGen
   let tempos = (map (+ dt) tl)
       (tl', m') = tempoJogo j tempos m
       mFalso = mapaFalso tempos m
@@ -119,11 +120,11 @@ tempoInf dt (EJ (Inf t tl dv udv (Jogo j m) d r) f a) = do
 eventoInf :: Event -> EstadoJogo -> IO EstadoJogo
 eventoInf e ej@(EJ (Inf t tl dv udv (Jogo j m) l r) f a)
   | jgd == Parado = return $ ej
-  | otherwise     = randomRIO (0, 100) >>= \ i ->
+  | otherwise     = newStdGen >>= \ sd ->
                       let j' = animaJogador j jgd $ zerarMapa m
                           d' = let (Move s) = jgd in s
                           r' = calcularPontos j udv r
-                          (udv', jogo) = deslizarPosicao i udv (Jogo j' m)
+                          (udv', jogo) = deslizarPosicao sd udv (Jogo j' m)
                       in verificarGameOver $
                          EJ (Inf t tl dv udv' jogo d' r') f a
   where jgd = eventosJogo e
@@ -170,8 +171,8 @@ mapaInicial :: IO Mapa
 mapaInicial = aux 17 $ Mapa 20 [le, lr, lr, lr]
   where lr = (Relva,     replicate 16 Nenhum ++ replicate 4 Arvore)
         le = (Estrada 0, replicate 20 Nenhum)
-        aux n m = if n <= 0 then return m else
-                    randomRIO (0, 100) >>= aux (n - 1) . estendeMapa m
+        aux n m = if n <= 0 then return m else newStdGen >>=
+                    aux (n - 1) . (\ r -> estendeMapa' r facil m)
 
 -- | 'inicializarInf' devolve o estado inicial do modo infinito.
 inicializarInf :: Assets        -- ^ Recurso do jogo
