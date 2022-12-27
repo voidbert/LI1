@@ -92,6 +92,7 @@ data Dificuldade = Dif
   (Terreno -> Int)            -- ^ Terrenos consecutivos máximos permitidos
   (Terreno -> Int)            -- ^ Velocidade máxima positiva permitida
   (Terreno -> (Float, Float)) -- ^ Intervalo (0 a 1) de quantidade de obstáculos
+  Int                         -- ^ Posição na lista de recordes por dificuldade
 
 {-|
   Lista de imagens / sons / outros necessários ao longo do jogo.

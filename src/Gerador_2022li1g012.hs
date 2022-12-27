@@ -44,7 +44,7 @@ import LI12223
 import Tarefa5_2022li1g012
 
 facil :: Dificuldade
-facil = Dif csc vt ro
+facil = Dif csc vt ro 0
   where csc Relva = 3
         csc _     = 2
         vt  _ = 2
@@ -53,7 +53,7 @@ facil = Dif csc vt ro
         ro (Estrada _) = (0.1, 0.2)
 
 medio :: Dificuldade
-medio = Dif csc vt ro
+medio = Dif csc vt ro 1
   where csc Relva = 2
         csc _     = 3
         vt  _     = 2
@@ -62,7 +62,7 @@ medio = Dif csc vt ro
         ro (Estrada _) = (0.2, 0.3)
 
 dificil :: Dificuldade
-dificil = Dif csc vt ro
+dificil = Dif csc vt ro 2
   where csc Relva = 1
         csc _     = 4
         vt  _     = 3
@@ -82,7 +82,7 @@ gerarVelocidade :: RandomGen gen
                 -> Terreno       -- ^ Terreno com a velocidade
                 -> Int           -- ^ Requisito do sinal da velocidade (0 - nenhum)
                 -> Velocidade    -- ^ Velocidade gerada
-gerarVelocidade sd (Dif _ vt _) ter r
+gerarVelocidade sd (Dif _ vt _ _) ter r
   | r > 0 = absv
   | r == 0 = sgn * absv
   | r < 0 = -absv
@@ -150,7 +150,7 @@ gerarTerreno sd d (Mapa _ []) =
 -- Mapa já tem linhas. Determinar se o terreno seguinte é igual ao anterior. Se
 -- sim, gerar velocidade caso aplicável. Senão, escolher outro terreno e outra
 -- velocidade.
-gerarTerreno sd d@(Dif csc _ _) m =
+gerarTerreno sd d@(Dif csc _ _ _) m =
   let (t, c) = contarTerrenos m
       (r, sd') = randomR (1, csc t) sd
       igs = r <= csc t - c -- se o terreno seguinte é (ou não) do mesmo tipo
@@ -189,7 +189,7 @@ gerarLinha :: RandomGen gen
            -> Terreno                -- ^ Tipo de terreno da linha
            -> Largura                -- ^ Largura da linha
            -> (Terreno, [Obstaculo]) -- ^ Linha produzida
-gerarLinha sd (Dif _ vs ro) ter l =
+gerarLinha sd (Dif _ vs ro _) ter l =
   let (mi, ma) = intervaloObstaculos l $ ro ter
       (no, sd') = randomR (mi, ma) sd
       obs = case ter of Relva     -> Arvore

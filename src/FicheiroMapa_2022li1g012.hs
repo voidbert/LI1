@@ -24,7 +24,7 @@ module FicheiroMapa_2022li1g012 (
   -- * Listagem e gestão de mapas
   listarMapas, diretoriaMapas, nomeMapa, apagarMapa,
   -- * Recordes do modo infinito
-  lerRecordeInf, guardarRecordeInf,
+  lerRecordeInf, lerRecordeInfDif, guardarRecordeInf, guardarRecordeInfDif,
   -- * Exportação e importação de mapas
   mapaStr, parseMapa, lerFicheiroMapa, guardarFicheiroMapa,
   -- * Funções auxiliares
@@ -44,6 +44,7 @@ import Data.Maybe
 import Text.Read
 
 import LI12223
+import Gerador_2022li1g012
 
 -- | A diretoria onde se encontram os mapas. Caso não exista, será criada.
 diretoriaMapas :: IO FilePath
@@ -94,8 +95,12 @@ ficheiroRecorde = do
   e <- doesFileExist f
   if e then return f else writeFile f "0" >> return f
 
--- | 'lerRecordeInf' lê do disco o recorde do jogador no modo infinito.
-lerRecordeInf :: IO (Maybe Int)
+{-|
+  'lerRecordeInf' lê do disco o recorde do jogador no modo infinito. Os três
+  inteiros correspondem ao recorde em cada dificuldade, da mais fácil para a
+  mais difícil.
+-}
+lerRecordeInf :: IO (Maybe (Int, Int, Int))
 lerRecordeInf = do
   f <- tryIOError ficheiroRecorde
   case f of (Left _)   -> return Nothing
@@ -103,8 +108,21 @@ lerRecordeInf = do
                              case c of (Left _)  -> return Nothing
                                        (Right c') -> return $ readMaybe c'
 
+{-|
+  'lerRecordeInfDif' lê do disco o recorde do jogador no modo infinito para uma
+  dada dificuldade.
+-}
+lerRecordeInfDif :: Dificuldade -> IO (Maybe Int)
+lerRecordeInfDif (Dif _ _ _ d) = lerRecordeInf >>= return . aux d
+  where aux _ Nothing          = Nothing
+        aux 0 (Just (n, _, _)) = Just n
+        aux 1 (Just (_, n, _)) = Just n
+        aux 2 (Just (_, _, n)) = Just n
+        aux _ _                = Nothing
+
+
 -- | 'guardarRecordeInf' guarda no disco o recorde do jogador no modo infinito.
-guardarRecordeInf :: Int -> IO Bool
+guardarRecordeInf :: (Int, Int, Int) -> IO Bool
 guardarRecordeInf n = do
  f <- tryIOError ficheiroRecorde
  case f of (Left _)  -> return False
@@ -112,6 +130,19 @@ guardarRecordeInf n = do
                             case r of (Left _)  -> return False
                                       (Right _) -> return True
 
+{-|
+  'guardarRecordeInfDif' guarda no disco o recorde no modo infinito para uma
+  dada dificuldade.
+-}
+guardarRecordeInfDif :: Dificuldade -> Int -> IO Bool
+guardarRecordeInfDif (Dif _ _ _ d) r = do
+  m <- lerRecordeInf
+  case m of Nothing          -> return False
+            (Just tr) -> guardarRecordeInf $ aux d r tr
+  where aux d r (a, b, c)
+          | d == 0 = (r, b, c)
+          | d == 1 = (a, r, c)
+          | d == 2 = (a, b, r)
 
 {-|
   'terrenoStr' converte o 'Terreno' de uma linha para uma 'String', para ser

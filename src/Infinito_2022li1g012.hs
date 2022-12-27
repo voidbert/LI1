@@ -61,11 +61,11 @@ calcularPontos (Jogador (_, y)) d (m, r) = (max m (18 - y + d), r)
   'guardarRecorde' regista o recorde do jogador num ficheiro caso tenha sido
   batido.
 -}
-guardarRecorde :: (Int, Int) -- ^ Pontuação e recorde
-               -> IO Bool    -- ^ Se a operação teve sucesso
-guardarRecorde (p, r) = if p > r then guardarRecordeInf p else return True
-
--- TODO - recorde com dificuldade
+guardarRecorde :: Dificuldade -- ^ Dificuldade do jogo
+               -> (Int, Int)  -- ^ Pontuação e recorde
+               -> IO Bool     -- ^ Se a operação teve sucesso
+guardarRecorde d (p, r) = if p > r then guardarRecordeInfDif d p
+  else return True
 
 {-|
   'verificarGameOver' verifica se o jogador faleceu ou não, indo para o menu
@@ -73,7 +73,7 @@ guardarRecorde (p, r) = if p > r then guardarRecordeInf p else return True
 -}
 verificarGameOver :: EstadoJogo -> IO EstadoJogo
 verificarGameOver ej@(EJ (Inf dif _ _ _ udv j@(Jogo jgd _) _ r) _ a)
-  | jogoTerminou j = guardarRecorde (calcularPontos jgd udv r) >>=
+  | jogoTerminou j = guardarRecorde dif (calcularPontos jgd udv r) >>=
       \ x -> if x then inicializarGO a (Right dif) else inicializarErroM a
         "Falha ao guardar\n\nrecorde :("
   | otherwise = return $ ej
@@ -195,7 +195,7 @@ inicializarInf :: Assets        -- ^ Recursos do jogo
                -> IO EstadoJogo -- ^ Estado inicial do menu frogger
 inicializarInf a d = do
   let funcoesInf = FJ tempoInf eventoInf renderizarInf
-  r <- lerRecordeInf
+  r <- lerRecordeInfDif d
   m' <- mapaInicial d
   case r of Nothing   -> inicializarErroM a "Falha ao ler\n\no recorde :("
             (Just r') -> let i = Inf d 0 (replicate 21 0) 0 0
