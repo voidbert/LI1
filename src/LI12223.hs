@@ -19,7 +19,7 @@ module LI12223 (
   -- ** Jogo
   Jogo(..), Jogador(..), Direcao(..), Jogada(..),
   -- ** Estados de jogo
-  Assets(..), DadosJogo(..), FuncoesJogo(..), EstadoJogo(..)
+  Dificuldade(..), Assets(..), DadosJogo(..), FuncoesJogo(..), EstadoJogo(..)
   ) where
 
 import Graphics.Gloss
@@ -87,6 +87,13 @@ data Jogada
   deriving (Show, Read, Eq)
 
 
+-- A 'Dificuldade' do jogo define os parâmetros de geração do mapa.
+data Dificuldade = Dif
+  (Terreno -> Int)            -- ^ Terrenos consecutivos máximos permitidos
+  (Terreno -> Int)            -- ^ Velocidade máxima positiva permitida
+  (Terreno -> (Float, Float)) -- ^ Intervalo (0 a 1) de quantidade de obstáculos
+  Int                         -- ^ Posição na lista de recordes por dificuldade
+
 {-|
   Lista de imagens / sons / outros necessários ao longo do jogo.
 -}
@@ -129,7 +136,11 @@ data DadosJogo = MenuP
                    Direcao    -- ^ Orientação do jogador
                    Bool       -- ^ Se a pontuação aumenta em cima ou baixo
                    (Int, Int) -- ^ Pontuação e recorde
+               | MenuD
+                  (Float, Float) -- ^ Posição do rato
+                  [Botao]
                | Inf
+                  Dificuldade     -- ^ Dificuldade do jogo
                   Float           -- ^ Tempo decorrido
                   [Float]         -- ^ Tempo desde a última atualização de cada linha
                   Float           -- ^ Progresso do smooth scrolling vertical
@@ -138,9 +149,9 @@ data DadosJogo = MenuP
                   Direcao         -- ^ Orientação do jogador
                   (Int, Int) -- ^ Pontuação máxima e recorde
                | GameOver
-                   (Float, Float) -- ^ Posição do rato
-                   [Botao]        -- ^ Botões de baixo
-                   FilePath       -- ^ Vazio para modo infinito, ou mapa frogger
+                   (Float, Float)                -- ^ Posição do rato
+                   [Botao]                       -- ^ Botões de baixo
+                   (Either FilePath Dificuldade) -- ^ Mapa frogger ou dificuldade infinito
 
 {-|
   Funções associadas a um 'EstadoJogo', responsáveis pela sua atualização após
