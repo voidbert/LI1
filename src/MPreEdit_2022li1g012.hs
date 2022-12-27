@@ -22,12 +22,12 @@ Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
 -}
 module MPreEdit_2022li1g012 (
   -- * Funções expostas
-  inicializarGO,
+  inicializarMPE,
   -- * Funções internas
   -- ** Geração de texto
-  adcionarTexto
+  adicionarTexto,
   -- ** Gloss
-  tempoPE, eventoPE, renderizarPE
+  tempoPE, eventoTeclado, renderizarPE
 ) where
 
 import System.IO.Error
