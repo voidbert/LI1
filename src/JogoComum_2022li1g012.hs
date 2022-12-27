@@ -84,19 +84,18 @@ avancosLinha t n
   por segundo. Assim, será movida uma unidade se o tempo passado for superior
   a @0.5s@, duas unidades se for superior a @1.0s@, ...
 
-  >>> tempoLinha 3 (Jogador (0, 0)) 1.1 (Rio 2, [Tronco, Nenhum, Nenhum])
+  >>> tempoLinha 3 1.1 (Rio 2, [Tronco, Nenhum, Nenhum])
   (0.1, [Nenhum, Nenhum, Tronco])
 -}
 tempoLinha :: Largura                         -- ^ Largura da linha
-           -> Jogador                         -- ^ Posição do jogador
            -> Float                           -- ^ Tempo desde a última atualização
            -> (Terreno, [Obstaculo])          -- ^ Linha a atualizar
            -> (Float, (Terreno, [Obstaculo])) -- ^ Tempo e linha atualizada
-tempoLinha _ _ _ l@(Relva,     _) = (0, l)
-tempoLinha _ _ _ l@(Rio 0,     _) = (0, l)
-tempoLinha _ _ _ l@(Estrada 0, _) = (0, l)
-tempoLinha lg j t l@(ter, obs) =
-  let (_, obs') = animaLinha' lg j (edit ter, obs) in (resto, (ter, obs'))
+tempoLinha _ _ l@(Relva,     _) = (0, l)
+tempoLinha _ _ l@(Rio 0,     _) = (0, l)
+tempoLinha _ _ l@(Estrada 0, _) = (0, l)
+tempoLinha lg t l@(ter, obs) =
+  let (_, obs') = animaLinha lg (edit ter, obs) in (resto, (ter, obs'))
   where -- Saber número de avanços e tempo restante
         vlinha (Rio n)     = n
         vlinha (Estrada n) = n
@@ -117,12 +116,11 @@ tempoLinha lg j t l@(ter, obs) =
 
   Ver 'tempoLinha'.
 -}
-tempoJogo :: Jogador         -- ^ Posição do jogador
-          -> [Float]         -- ^ Tempo desde a última atualização das linhas
+tempoJogo :: [Float]         -- ^ Tempo desde a última atualização das linhas
           -> Mapa            -- ^ Mapa a ser atualizado
           -> ([Float], Mapa) -- ^ Tempos restantes e mapa atualizado
-tempoJogo j ts (Mapa lg lns) = (ts', Mapa lg lns')
-  where (ts', lns') = unzip $ map (uncurry $ tempoLinha lg j) $ zip ts lns
+tempoJogo ts (Mapa lg lns) = (ts', Mapa lg lns')
+  where (ts', lns') = unzip $ map (uncurry $ tempoLinha lg) $ zip ts lns
 
 {-|
   'mapaFalso' altera a velocidade das linhas do mapa para corresponder ao
