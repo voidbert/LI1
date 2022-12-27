@@ -72,7 +72,7 @@ tempoFrogger :: Float -> EstadoJogo -> IO EstadoJogo
 tempoFrogger dt (EJ (Frogger t tl fp (Jogo j m) d l r) f a) = verificarGameOver
   $ EJ (Frogger (t + dt) tl' fp (Jogo j' m') d l r) f a
   where tempos = (map (+ dt) tl)
-        (tl', m') = tempoJogo j tempos m
+        (tl', m') = tempoJogo tempos m
         mFalso = mapaFalso tempos m
         j' = animaJogador j Parado mFalso
 
