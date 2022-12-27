@@ -20,7 +20,15 @@ Description : Menu pre-editor do modo frogger
 Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
               Humberto Gil Azevedo Sampaio Gomes <a104348@alunos.uminho.pt>
 -}
-module MPreEdit_2022li1g012 where
+module MPreEdit_2022li1g012 (
+  -- * Funções expostas
+  inicializarGO,
+  -- * Funções internas
+  -- ** Geração de texto
+  adcionarTexto
+  -- ** Gloss
+  tempoPE, eventoPE, renderizarPE
+) where
 
 import System.IO.Error
 import System.FilePath
@@ -35,6 +43,7 @@ import Editor_2022li1g012
 import {-# SOURCE #-} MenuF_2022li1g012 -- módulos mutuamente recursivos
 
 -- A passagem do tempo não importa para este menu
+
 tempoPE :: Float 
         -> EstadoJogo 
         -> IO EstadoJogo
@@ -44,6 +53,7 @@ tempoPE _ = return
   'adicionarTexto' adiciona um caracter à caixa de texto, se esta não estiver
   ainda cheia.
 -}
+
 adicionarTexto :: EstadoJogo
                -> Char
                -> EstadoJogo
@@ -52,11 +62,12 @@ adicionarTexto ej@(EJ (MenuPE p bts s) fj a) c
   | otherwise = ej
 
 {- |
-  Esta função muda o estado quando uma tecla é pressionada. Ao pressionar
+  'eventoTeclado' muda o estado quando uma tecla é pressionada. Ao pressionar
   qualquer tecla com caracteres, o estado muda para representar o caracter 
-  apropriado na tela, construindo uma lista. Se o backspace for pressionado,
+  apropriado na tela, construindo uma lista. Se o 'Backspace' for pressionado,
   é excluido o ultimo caracter da lista criada até então. 
 -}
+
 eventoTeclado :: Event 
               -> EstadoJogo 
               -> IO (EstadoJogo)
@@ -82,10 +93,11 @@ eventoTeclado (EventKey (SpecialKey KeySpace) Down _ _) ej =
 eventoTeclado _ e = return e 
 
 {- |
-  Esta função renderiza o menu com as seguintes Pictures: a lista @s@ que é 
-  modificada com a função 'eventoTeclado'; o texto no topo para indicar uma ação
+  'renderizarPE' renderiza o menu com as seguintes Pictures: a lista 's', que é 
+  modificada com a função 'eventoTeclado', o texto no topo para indicar uma ação
   ao jogador e um conjunto de pictures de dois botões.
 -}
+
 renderizarPE :: EstadoJogo 
              -> IO Picture
 renderizarPE (EJ (MenuPE p bts s) fj a) = return $ Pictures [
@@ -95,11 +107,9 @@ renderizarPE (EJ (MenuPE p bts s) fj a) = return $ Pictures [
   Pictures $ map (imagemBotao p) bts]
   where ((_, h), ndm) = mrTexto (fonte a) TCentro "Nome do Mapa"
 
-{- |
-  O estado inicial do Menu, apresenta as translações dos botões a ser 
-  renderizados pela função 'renderizarPE' e todos os parametros iniciais
-  do estado de jogo.
--}
+
+-- | 'inicializarMPE' devolve o estado inicial do Menu.
+
 inicializarMPE :: Assets 
                 -> IO EstadoJogo
 inicializarMPE a = return $ EJ (MenuPE (0,0) bts "") funcoesJogoPE a
