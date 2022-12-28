@@ -41,6 +41,7 @@ import RenderMapa_2022li1g012
 import JogoComum_2022li1g012
 import UI_2022li1g012
 import ErroM_2022li1g012
+import Audio_2022li1g012
 import {-# SOURCE #-} GameOver_2022li1g012 -- módulos mutuamente recursivos
 
 {-|
@@ -62,7 +63,7 @@ guardarRecorde (p, r) fp
 -}
 verificarGameOver :: EstadoJogo -> IO EstadoJogo
 verificarGameOver ej@(EJ (Frogger _ _ fp j _ _ r) _ a)
-  | jogoTerminou j = guardarRecorde r fp >>= \ x -> if x then
+  | jogoTerminou j = pararAudio' a jogoAudio >> guardarRecorde r fp >>= \ x -> if x then
       inicializarGO a (Left fp) else inicializarErroM a
      "Falha ao guardar\n\nrecorde :("
   | otherwise = return $ ej
@@ -127,5 +128,6 @@ inicializarFrogger a fp = do
             Just (r, m') -> let f = Frogger 0 (replicate 20 0) fp
                                       (Jogo (Jogador (10, 19)) m') Cima True
                                       (0, r)
-                            in return $ EJ f funcoesFrogger a
+                            in comecarAudio' a jogoAudio >>=
+                               return . EJ f funcoesFrogger 
 
