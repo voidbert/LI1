@@ -7,7 +7,7 @@ license:            Apache-2.0
 author:             José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
                     Humberto Gil Azevedo Sampaio Gomes <a104348@alunos.uminho.pt>
 
-data-files: assets/export/*.bmp
+data-files: assets/export/*
 
 -- TODO: isto não aparenta funcionar. Resolver
 package gloss
@@ -24,7 +24,7 @@ library
     Tarefa5_2022li1g012
     UI_2022li1g012
     FicheiroMapa_2022li1g012
-  build-depends:    base >=4.13.3.0 && < 5, gloss >=1.13.0.1, bmp >=1.2, directory, filepath
+  build-depends:    base >=4.13.3.0 && < 5, gloss >=1.13.0.1, bmp >=1.2, directory, filepath, process
   hs-source-dirs:   src
   default-language: Haskell2010
 
@@ -54,9 +54,9 @@ executable 2022li1g012
     Frogger_2022li1g012
     Infinito_2022li1g012
     GameOver_2022li1g012
-
-  build-depends:    base >=4.13.3.0 && < 5, gloss >=1.13.0.1, bmp >=1.2,
-    directory, filepath, random, random-shuffle
+    Audio_2022li1g012
+  build-depends:    base >=4.13.3.0 && < 5, gloss >=1.13.0.1, bmp >=1.2, 
+    directory, filepath, random, random-shuffle, process
   ghc-options: -O2 -threaded
   hs-source-dirs:   src
   default-language: Haskell2010
@@ -76,6 +76,6 @@ test-suite 2022li1g012-tests
     Tarefa3_2022li1g012_Spec
     Tarefa4_2022li1g012_Spec
     Tarefa5_2022li1g012_Spec
-  build-depends:        base >=4.13.3.0 && < 5, HUnit, gloss >=1.13.0.1, bmp >=1.2, directory, filepath
+  build-depends:        base >=4.13.3.0 && < 5, HUnit, gloss >=1.13.0.1, bmp >=1.2, directory, filepath, process
   hs-source-dirs:       tests src
   default-language:     Haskell2010
