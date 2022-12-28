@@ -48,6 +48,7 @@ import RenderMapa_2022li1g012
 import JogoComum_2022li1g012
 import UI_2022li1g012
 import ErroM_2022li1g012
+import Audio_2022li1g012
 import {-# SOURCE #-} GameOver_2022li1g012 -- módulos mutuamente recursivos
 
 -- | 'calcularPontos' calcula a pontuação do jogador
@@ -74,7 +75,7 @@ guardarRecorde d (p, r) = if p > r then guardarRecordeInfDif d p
 verificarGameOver :: EstadoJogo -> IO EstadoJogo
 verificarGameOver ej@(EJ (Inf dif _ _ _ udv j@(Jogo jgd _) _ r) _ a)
   | jogoTerminou j = guardarRecorde dif (calcularPontos jgd udv r) >>=
-      \ x -> if x then inicializarGO a (Right dif) else inicializarErroM a
+      \ x -> if x then pararAudio' a jogoAudio >> inicializarGO a (Right dif) else pararAudio' a jogoAudio >> inicializarErroM a
         "Falha ao guardar\n\nrecorde :("
   | otherwise = return $ ej
 
@@ -200,5 +201,6 @@ inicializarInf a d = do
   case r of Nothing   -> inicializarErroM a "Falha ao ler\n\no recorde :("
             (Just r') -> let i = Inf d 0 (replicate 21 0) 0 0
                                      (Jogo (Jogador (10, 18)) m') Cima (0, r')
-                            in return $ EJ i funcoesInf a
+                            in comecarAudio' a jogoAudio >>=
+                               return . EJ i funcoesInf 
 
