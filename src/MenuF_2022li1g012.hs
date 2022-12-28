@@ -47,6 +47,7 @@ import FicheiroMapa_2022li1g012
 import ErroM_2022li1g012
 import MPreEdit_2022li1g012
 import Editor_2022li1g012
+import Frogger_2022li1g012
 import {-# SOURCE #-} MenuP_2022li1g012 -- módulos mutuamente recursivos
 
 -- | 'tempoMenuF' reage à passagem do tempo (nenhuma)
@@ -95,7 +96,7 @@ cliqueLinhas ej@(EJ (MenuF _ _ [] _) _ _) = return (Nenhuma, ej)
 cliqueLinhas ej@(EJ (MenuF p v (x@(fp, _, _):xs) b) f as)
   | a == Nenhuma = (cliqueLinhas $ EJ (MenuF p v xs b) f as) >>= (seguintes x a)
   | a == Editar  = inicializarEditor as True fp >>= (\ x -> return (Editar, x))
-  | a == Jogar   = return (Jogar,  ej) -- TODO
+  | a == Jogar   = inicializarFrogger as fp >>= (\ x -> return (Jogar, x))
   | a == Apagar  = do apg <- apagarMapa fp
                       if apg then inicializarMenuF as v >>=
                                   (\ e -> return (Apagar, e))

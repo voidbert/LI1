@@ -20,49 +20,63 @@ Description : Tela de "Game Over"
 Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
               Humberto Gil Azevedo Sampaio Gomes <a104348@alunos.uminho.pt>
 -}
-module GameOver_2022li1g012 where
+module GameOver_2022li1g012 (
+    -- * Funções expostas
+  inicializarGO,
+  -- * Funções internas
+  -- ** Gloss
+  tempoGO, eventoGO, renderizarGO
+) where
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 
 import LI12223
 import UI_2022li1g012
+import Frogger_2022li1g012
+import Infinito_2022li1g012
 import {-# SOURCE #-} MenuP_2022li1g012
 
--- N importa no caso
+-- O Tempo não importa para este menu
+
 tempoGO :: Float 
         -> EstadoJogo 
         -> IO EstadoJogo
 tempoGO _ = return
 
-{- 
+{-|
+  'eventoGO' reage ao input do jogador (movimentação do rato por cima dos 
+  botões e clique de botão esquerdo do rato). Existe uma adaptação para
+  que o botão "Jogar de novo" possa iniciar tanto o 'Frogger' como o 'Modo
+  infinito', dependendo do que foi jogado anteriormente.
 -}
-eventoGO :: Event 
+
+eventoGO :: Event           -- ^ Evento que modifica o EstadoJogo
          -> EstadoJogo 
-         -> IO (EstadoJogo)
-eventoGO (EventMotion (x, y)) (EJ (GameOver _ bts _) fj a) 
-  = return $                   EJ (GameOver (x, y) bts (balde a)) fj a
+         -> IO (EstadoJogo) -- ^ Estado de jogo atualizado de acordo com o evento
+eventoGO (EventMotion (x, y)) (EJ (GameOver _ bts fp) fj a) 
+  = return $ EJ (GameOver (x, y) bts fp) fj a
 eventoGO (EventKey (MouseButton LeftButton) Up _ p)
-  (EJ (GameOver _ bts _) _ a)
+  (EJ (GameOver _ bts s) _ a)
+  | dentro (fst (bts !! 0)) p = case s of Left fp -> inicializarFrogger a fp
+                                          Right d -> inicializarInf a d
   | dentro (fst (bts !! 1)) p = inicializarMenu a
 eventoGO _ e = return e
 
-{- 
--}
+-- | 'renderizarGO' desenha o menu principal com um conjunto de Pictures.
+
 renderizarGO :: EstadoJogo 
              -> IO Picture
 renderizarGO (EJ (GameOver p bts _) fj a) = return $ Pictures [
   Translate 0 250 $ Scale 5 5 $ snd $ mrTexto (fonte a) TCentro "Game\nOver",
-  balde a,
-  Pictures $ map (imagemBotao p) bts]
+  balde a, Pictures $ map (imagemBotao p) bts ]
 
-{-
--}
-inicializarGO :: Assets 
-              -> IO EstadoJogo
-inicializarGO a = return $ EJ (GameOver (0,0) bts i) funcoesJogoGO a
-  where i = balde a 
-        b1@((_, (w1, h1)), _) = scaleBt 2 $ mrBotao (fonte a) "Jogar de novo"
+-- | 'inicializarGO' devolve o estado estado inicial do menu de "Game Over".
+inicializarGO :: Assets                        -- ^ Recursos do jogo
+              -> (Either FilePath Dificuldade) -- ^ Mapa frogger ou dificuldade infinito
+              -> IO EstadoJogo                 -- ^ Estado inicial do menu
+inicializarGO a e = return $ EJ (GameOver (0,0) bts e) funcoesJogoGO a
+  where b1@((_, (w1, h1)), _) = scaleBt 2 $ mrBotao (fonte a) "Jogar de novo"
         b2@((_, (w2, h2)), _) = scaleBt 2 $ mrBotao (fonte a) "Voltar ao menu"
         b1' = translateBt (384 - w1 / 2 - 16)  (-384 + h1 / 2 + 16) b1
         b2' = translateBt (-384 + w2 / 2 + 16) (-384 + h2 / 2 + 16) b2

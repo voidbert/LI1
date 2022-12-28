@@ -19,7 +19,7 @@ module LI12223 (
   -- ** Jogo
   Jogo(..), Jogador(..), Direcao(..), Jogada(..),
   -- ** Estados de jogo
-  Assets(..), DadosJogo(..), FuncoesJogo(..), EstadoJogo(..), Audios
+  Dificuldade(..), Assets(..), DadosJogo(..), FuncoesJogo(..), EstadoJogo(..), Audios
   ) where
 
 import Graphics.Gloss
@@ -88,6 +88,13 @@ data Jogada
   deriving (Show, Read, Eq)
 
 
+-- A 'Dificuldade' do jogo define os parâmetros de geração do mapa.
+data Dificuldade = Dif
+  (Terreno -> Int)            -- ^ Terrenos consecutivos máximos permitidos
+  (Terreno -> Int)            -- ^ Velocidade máxima positiva permitida
+  (Terreno -> (Float, Float)) -- ^ Intervalo (0 a 1) de quantidade de obstáculos
+  Int                         -- ^ Posição na lista de recordes por dificuldade
+
 {-|
   Lista de imagens / sons / outros necessários ao longo do jogo.
 -}
@@ -127,12 +134,30 @@ data DadosJogo = MenuP
                    FilePath       -- ^ Onde guardar o mapa
                    Mapa           -- ^ Conteúdos do mapa
                    [Botao]        -- ^ Botões de baixo
+               | Frogger
+                   Float      -- ^ Tempo decorrido
+                   [Float]    -- ^ Tempo desde a útlima atualização das linhas do mapa
+                   FilePath   -- ^ Caminho de ficheiro do mapa
+                   Jogo       -- ^ Mapa e jogador
+                   Direcao    -- ^ Orientação do jogador
+                   Bool       -- ^ Se a pontuação aumenta em cima ou baixo
+                   (Int, Int) -- ^ Pontuação e recorde
+               | MenuD
+                  (Float, Float) -- ^ Posição do rato
+                  [Botao]
+               | Inf
+                  Dificuldade     -- ^ Dificuldade do jogo
+                  Float           -- ^ Tempo decorrido
+                  [Float]         -- ^ Tempo desde a última atualização de cada linha
+                  Float           -- ^ Progresso do smooth scrolling vertical
+                  Int             -- ^ Unidades de deslize vertical (nº. de 'deslizaJogo')
+                  Jogo            -- ^ Mapa e jogador
+                  Direcao         -- ^ Orientação do jogador
+                  (Int, Int) -- ^ Pontuação máxima e recorde
                | GameOver
-                   (Float, Float)
-                   [Botao]
-                   Picture
-               | Play
-
+                   (Float, Float)                -- ^ Posição do rato
+                   [Botao]                       -- ^ Botões de baixo
+                   (Either FilePath Dificuldade) -- ^ Mapa frogger ou dificuldade infinito
 
 {-|
   Funções associadas a um 'EstadoJogo', responsáveis pela sua atualização após
