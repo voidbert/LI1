@@ -13,13 +13,13 @@ Tipos de dados e funções auxiliares para a realização do projeto de LI1 em 2
 module LI12223 (
   -- * Tipos de dados
   -- ** Básicos
-  Coordenadas , Largura , Velocidade,
+  Coordenadas , Largura , Velocidade, 
   -- ** Mapas
   Mapa(..), Terreno(..), Obstaculo(..),
   -- ** Jogo
   Jogo(..), Jogador(..), Direcao(..), Jogada(..),
   -- ** Estados de jogo
-  Assets(..), DadosJogo(..), FuncoesJogo(..), EstadoJogo(..)
+  Assets(..), DadosJogo(..), FuncoesJogo(..), EstadoJogo(..), Audios
   ) where
 
 import Graphics.Gloss
@@ -92,16 +92,16 @@ data Jogada
   Lista de imagens / sons / outros necessários ao longo do jogo.
 -}
 data Assets = Assets {
-  fonte :: BitmapData,
-  tiles :: BitmapData,
-  balde :: Picture
+  fonte  :: BitmapData,
+  tiles  :: BitmapData,
+  balde  :: Picture,
+  musica :: Audios
  }
 
-data Audios = Audio {
-  menu :: Maybe ProcessHandle,
-  jogo :: Maybe ProcessHandle,
-  gameOver :: Maybe ProcessHandle              
- }
+-- | Tipo para audios do jogo.
+
+type Audios = [(FilePath, ProcessHandle)]
+
 {-|
   Dados associados a um 'EstadoJogo', necessários de serem passados de
   atualização em atualização ou de frame em frame.
