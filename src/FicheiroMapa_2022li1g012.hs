@@ -93,7 +93,7 @@ ficheiroRecorde = do
   createDirectoryIfMissing True d
   let f = d </> "Recorde"
   e <- doesFileExist f
-  if e then return f else writeFile f "0" >> return f
+  if e then return f else writeFile f "(0,0,0)" >> return f
 
 {-|
   'lerRecordeInf' lê do disco o recorde do jogador no modo infinito. Os três
