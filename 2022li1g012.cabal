@@ -7,7 +7,7 @@ license:            Apache-2.0
 author:             José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
                     Humberto Gil Azevedo Sampaio Gomes <a104348@alunos.uminho.pt>
 
-data-files: assets/export/*.bmp
+data-files: assets/export/*
 
 -- TODO: isto não aparenta funcionar. Resolver
 package gloss
