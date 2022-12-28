@@ -90,7 +90,7 @@ lerAssets = do
   fnt <- lerBMP "assets/export/Font.bmp"
   bld <- lerPicture "assets/export/Balde.bmp"
   tls <- lerBMP "assets/export/Tiles.bmp"
-  return (Assets (bitmapDataOfBMP fnt) (bitmapDataOfBMP tls) bld)
+  return (Assets (bitmapDataOfBMP fnt) (bitmapDataOfBMP tls) bld [])
 
 -- | Ponto de entrada do programa, onde se abre a janela com o jogo.
 main :: IO ()
