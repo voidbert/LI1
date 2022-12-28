@@ -35,6 +35,7 @@ import LI12223
 import UI_2022li1g012
 import MenuF_2022li1g012
 import MenuD_2022li1g012
+import Audio_2022li1g012 
 
 -- | 'tempoMenuP' reage à passagem do tempo (nenhuma)
 tempoMenuP :: Float -> EstadoJogo -> IO EstadoJogo
@@ -51,7 +52,7 @@ eventoMenuP (EventKey (MouseButton LeftButton) Up _ (x, y))
             ej@(EJ (MenuP _ bts) _ a)
   | dentro (fst (bts !! 0)) (x, y) = inicializarMenuD a
   | dentro (fst (bts !! 1)) (x, y) = inicializarMenuF a 0
-  | dentro (fst (bts !! 2)) (x, y) = exitSuccess -- Botão sair
+  | dentro (fst (bts !! 2)) (x, y) = pararAudios (musica a) >> exitSuccess -- Botão sair
 eventoMenuP _ e = return e
 
 -- | 'renderizarMenuP' é responsável por desenhar o menu principal no ecrã.
@@ -67,7 +68,9 @@ renderizarMenuP (EJ (MenuP p bts) _ b) = return $ Pictures [
 
 -- | 'inicializarMenu' devolve o estado inicial do menu principal.
 inicializarMenu :: Assets -> IO EstadoJogo
-inicializarMenu a = return $ EJ (MenuP (0, 0) bts) funcoesMenuP a
+inicializarMenu a = 
+  comecarAudio' a menuAudio >>=
+  return . EJ (MenuP (0, 0) bts) funcoesMenuP 
   where bts = map (translateBt 0 (-120)) $ snd $
           gerarBotoesEspV (fonte a) 15 3 textoBotoes
         textoBotoes = [ "Modo infinito", "Modo frogger", "Sair" ]
