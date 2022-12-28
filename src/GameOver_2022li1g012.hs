@@ -35,6 +35,7 @@ import LI12223
 import UI_2022li1g012
 import Frogger_2022li1g012
 import Infinito_2022li1g012
+import Audio_2022li1g012
 import {-# SOURCE #-} MenuP_2022li1g012
 
 -- O Tempo não importa para este menu
@@ -58,9 +59,10 @@ eventoGO (EventMotion (x, y)) (EJ (GameOver _ bts fp) fj a)
   = return $ EJ (GameOver (x, y) bts fp) fj a
 eventoGO (EventKey (MouseButton LeftButton) Up _ p)
   (EJ (GameOver _ bts s) _ a)
-  | dentro (fst (bts !! 0)) p = case s of Left fp -> inicializarFrogger a fp
-                                          Right d -> inicializarInf a d
-  | dentro (fst (bts !! 1)) p = inicializarMenu a
+  | dentro (fst (bts !! 0)) p = 
+    case s of Left fp -> pararAudio' a goAudio >> inicializarFrogger a fp
+              Right d -> pararAudio' a goAudio >> inicializarInf a d
+  | dentro (fst (bts !! 1)) p = pararAudio' a goAudio >> inicializarMenu a
 eventoGO _ e = return e
 
 -- | 'renderizarGO' desenha o menu principal com um conjunto de Pictures.
@@ -75,7 +77,9 @@ renderizarGO (EJ (GameOver p bts _) fj a) = return $ Pictures [
 inicializarGO :: Assets                        -- ^ Recursos do jogo
               -> (Either FilePath Dificuldade) -- ^ Mapa frogger ou dificuldade infinito
               -> IO EstadoJogo                 -- ^ Estado inicial do menu
-inicializarGO a e = return $ EJ (GameOver (0,0) bts e) funcoesJogoGO a
+inicializarGO a e =
+  comecarAudio' a goAudio >>= 
+  return . EJ (GameOver (0,0) bts e) funcoesJogoGO 
   where b1@((_, (w1, h1)), _) = scaleBt 2 $ mrBotao (fonte a) "Jogar de novo"
         b2@((_, (w2, h2)), _) = scaleBt 2 $ mrBotao (fonte a) "Voltar ao menu"
         b1' = translateBt (384 - w1 / 2 - 16)  (-384 + h1 / 2 + 16) b1
