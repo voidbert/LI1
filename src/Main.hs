@@ -22,13 +22,15 @@ Copyright   : José António Fernandes Alves Lopes <a104541@alunos.uminho.pt>
 -}
 module Main (
   -- * Ponto de entrada
-  main,
+  main, main',
   -- * Gloss
   renderizarGloss, eventosGloss, tempoGloss,
   -- * Leitura de assets
   lerBMP, lerPicture, lerAssets
   ) where
 
+import System.Environment
+import System.Process
 import Data.Maybe
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
@@ -38,6 +40,8 @@ import Codec.BMP
 import LI12223
 import MenuP_2022li1g012
 import GameOver_2022li1g012
+import Audio_2022li1g012
+
 {-|
   'renderizarGloss', dado um estado de jogo, devolve os conteúdos que devem ser
   desenhados no ecrã.
@@ -92,10 +96,26 @@ lerAssets = do
   tls <- lerBMP "assets/export/Tiles.bmp"
   return (Assets (bitmapDataOfBMP fnt) (bitmapDataOfBMP tls) bld [])
 
--- | Ponto de entrada do programa, onde se abre a janela com o jogo.
-main :: IO ()
-main = do
+-- | Onde se lêm os recursos do jogo e se abre a janela.
+main' :: IO ()
+main' = do
   let janela = InWindow "Crossy Road" (768, 768) (0, 0)
   assets <- lerAssets
   inicial <- inicializarMenu assets
   playIO janela black 60 inicial renderizarGloss eventosGloss tempoGloss
+
+{-|
+  Ponto de entrada do programa. Não confundir com 'main''. Como o gloss sai do
+  programa quando a janela é fechada, é impossível parar os processos do 'mpv'
+  a correr música de fundo. Esta função abre o jogo, que armazena no disco uma
+  lista de processos do @mpv@, e quando o jogo acaba, estes são parados.
+-}
+main :: IO ()
+main = do
+  let jogar = do p <- getExecutablePath
+                 h <- spawnProcess p ["--child"]
+                 waitForProcess h >> pararGuardados
+  a <- getArgs
+  case a of []     -> jogar
+            (x:xs) -> if x == "--child" then main' else jogar
+

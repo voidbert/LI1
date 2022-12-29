@@ -63,9 +63,10 @@ guardarRecorde (p, r) fp
 -}
 verificarGameOver :: EstadoJogo -> IO EstadoJogo
 verificarGameOver ej@(EJ (Frogger _ _ fp j _ _ r) _ a)
-  | jogoTerminou j = pararAudio' a jogoAudio >> guardarRecorde r fp >>= \ x -> if x then
-      inicializarGO a (Left fp) else inicializarErroM a
-     "Falha ao guardar\n\nrecorde :("
+  | jogoTerminou j = guardarRecorde r fp >>= \ x -> if x then
+      pararAudio' a jogoAudio >>= (flip inicializarGO) (Left fp) else
+      pararAudio' a jogoAudio >>= (flip inicializarErroM)
+        "Falha ao guardar\n\nrecorde :("
   | otherwise = return $ ej
 
 -- | 'tempoFrogger' reage à passagem do tempo (nenhuma).
