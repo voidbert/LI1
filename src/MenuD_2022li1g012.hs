@@ -49,9 +49,12 @@ eventoMenuD (EventMotion (x, y)) (EJ (MenuD _ bts) f b) =
   return $ EJ (MenuD (x, y) bts) f b
 eventoMenuD (EventKey (MouseButton LeftButton) Up _ (x, y))
             ej@(EJ (MenuD _ bts) _ a)
-  | dentro (fst (bts !! 0)) (x, y) = pararAudios (musica a) >> inicializarInf a facil
-  | dentro (fst (bts !! 1)) (x, y) = pararAudios (musica a) >> inicializarInf a medio
-  | dentro (fst (bts !! 2)) (x, y) = pararAudios (musica a) >> inicializarInf a dificil
+  | dentro (fst (bts !! 0)) (x, y) = pararAudio' a menuAudio >>=
+      (flip inicializarInf) facil
+  | dentro (fst (bts !! 1)) (x, y) = pararAudio' a menuAudio >>=
+      (flip inicializarInf) medio
+  | dentro (fst (bts !! 2)) (x, y) = pararAudio' a menuAudio >>=
+      (flip inicializarInf) dificil
 eventoMenuD _ e = return e
 
 -- | 'renderizarMenuD' é responsável por desenhar o menu no ecrã.

@@ -60,9 +60,9 @@ eventoGO (EventMotion (x, y)) (EJ (GameOver _ bts fp) fj a)
 eventoGO (EventKey (MouseButton LeftButton) Up _ p)
   (EJ (GameOver _ bts s) _ a)
   | dentro (fst (bts !! 0)) p = 
-    case s of Left fp -> pararAudio' a goAudio >> inicializarFrogger a fp
-              Right d -> pararAudio' a goAudio >> inicializarInf a d
-  | dentro (fst (bts !! 1)) p = pararAudio' a goAudio >> inicializarMenu a
+    case s of Left fp -> pararAudio' a goAudio >>= (flip inicializarFrogger) fp
+              Right d -> pararAudio' a goAudio >>= (flip inicializarInf) d
+  | dentro (fst (bts !! 1)) p = pararAudio' a goAudio >>= inicializarMenu
 eventoGO _ e = return e
 
 -- | 'renderizarGO' desenha o menu principal com um conjunto de Pictures.

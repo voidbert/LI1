@@ -97,7 +97,8 @@ cliqueLinhas ej@(EJ (MenuF _ _ [] _) _ _) = return (Nenhuma, ej)
 cliqueLinhas ej@(EJ (MenuF p v (x@(fp, _, _):xs) b) f as)
   | a == Nenhuma = (cliqueLinhas $ EJ (MenuF p v xs b) f as) >>= (seguintes x a)
   | a == Editar  = inicializarEditor as True fp >>= (\ x -> return (Editar, x))
-  | a == Jogar   = pararAudio' as menuAudio >> inicializarFrogger as fp >>= (\ x -> return (Jogar, x))
+  | a == Jogar   = pararAudio' as menuAudio >>= (flip inicializarFrogger) fp
+                     >>= (\ x -> return (Jogar, x))
   | a == Apagar  = do apg <- apagarMapa fp
                       if apg then inicializarMenuF as v >>=
                                   (\ e -> return (Apagar, e))

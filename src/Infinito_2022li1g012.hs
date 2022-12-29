@@ -75,8 +75,8 @@ guardarRecorde d (p, r) = if p > r then guardarRecordeInfDif d p
 verificarGameOver :: EstadoJogo -> IO EstadoJogo
 verificarGameOver ej@(EJ (Inf dif _ _ _ udv j@(Jogo jgd _) _ r) _ a)
   | jogoTerminou j = guardarRecorde dif (calcularPontos jgd udv r) >>=
-      \ x -> if x then pararAudio' a jogoAudio >> inicializarGO a (Right dif) else pararAudio' a jogoAudio >> inicializarErroM a
-        "Falha ao guardar\n\nrecorde :("
+      \ x -> pararAudio' a jogoAudio >>= if x then (flip inicializarGO) (Right dif)
+        else (flip inicializarErroM) "Falha ao guardar\n\nrecorde :("
   | otherwise = return $ ej
 
 {-|
