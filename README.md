@@ -24,6 +24,8 @@ $ git clone https://gitlab.com/uminho-di/li1/2223/projetos/2022li1g012.git
 
 ### Correr e instalar o jogo
 
+Uma dependência opcional para jogar com áudio é o [mpv](https://mpv.io/).
+
 Para correr o programa (compilação automática do projeto e das dependências):
 
 ```bash
@@ -34,12 +36,6 @@ Para instalar o jogo:
 
 ```bash
 $ cabal install
-```
-
-Aplicação necessária para o funcionamento do áudio (opcional):  
-
-```bash
-https://mpv.io/
 ```
 
 ## Desenvolvimento
