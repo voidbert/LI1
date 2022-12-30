@@ -33,7 +33,13 @@ $ cabal run exe:2022li1g012
 Para instalar o jogo:
 
 ```bash
-$ cabal install exe:2022li1g012
+$ cabal install
+```
+
+Aplicação necessária para o funcionamento do áudio (opcional):  
+
+```bash
+https://mpv.io/
 ```
 
 ## Desenvolvimento
