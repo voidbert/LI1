@@ -6,6 +6,10 @@ Clone do famoso jogo como um projeto de Laboratórios de Informática I
  - Humberto Gil Azevedo Sampaio Gomes (a104348[at]alunos.uminho.pt)
  - José António Fernandes Alves Lopes (a104541[at]alunos.uminho.pt)
 
+### Nota
+
+20 / 20 ⭐
+
 ## Como começar
 
 ### Clonar o repositório
