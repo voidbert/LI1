@@ -2,6 +2,10 @@
 
 Clone do famoso jogo como um projeto de Laboratórios de Informática I
 
+![Game screenshot](screenshots/Game.png)
+
+See [screenshots](screenshots/README.md) for more images.
+
 ### Autoria do Grupo 12
  - Humberto Gil Azevedo Sampaio Gomes (a104348[at]alunos.uminho.pt)
  - José António Fernandes Alves Lopes (a104541[at]alunos.uminho.pt)
